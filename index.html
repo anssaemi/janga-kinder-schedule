@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026학년도 유치원 주간업무 & 월중행사 취합 시스템</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    @media print {
+      body { background-color: #ffffff !important; font-size: 11px !important; }
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      @page {
+        size: A4 landscape;
+        margin: 8mm 6mm;
+      }
+      table { border-collapse: collapse !important; width: 100% !important; }
+      th, td { border: 1px solid #4b5563 !important; }
+      .cal-cell { min-height: 75px !important; }
+    }
+    .print-only { display: none; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- 헤더 (네비게이션 & 주요 액션) -->
+  <header class="bg-indigo-900 text-white shadow-md no-print sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-indigo-700 flex items-center justify-center text-yellow-300">
+          <i class="fa-solid fa-shapes text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight">유치원 교육활동 & 월중행사 취합 시스템</h1>
+          <p class="text-xs text-indigo-300">2026학년도 주간·월간 학사일정 아카이브</p>
+        </div>
+      </div>
+
+      <!-- 탭 버튼 -->
+      <nav class="flex space-x-1 bg-indigo-950/60 p-1 rounded-lg">
+        <button type="button" onclick="switchTab('weekly')" id="tab-btn-weekly" class="cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow">
+          <i class="fa-solid fa-table-list mr-1.5"></i>주간업무
+        </button>
+        <button type="button" onclick="switchTab('monthly')" id="tab-btn-monthly" class="cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-indigo-200 hover:text-white">
+          <i class="fa-regular fa-calendar-days mr-1.5"></i>월중행사 (달력)
+        </button>
+      </nav>
+
+      <!-- 우측 액션 버튼 -->
+      <div class="flex items-center space-x-2">
+        <button type="button" onclick="openModal()" class="cursor-pointer px-3.5 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-md flex items-center shadow transition-colors">
+          <i class="fa-solid fa-plus mr-1.5"></i>일정 등록
+        </button>
+        <button type="button" onclick="window.print()" class="cursor-pointer px-3 py-1.5 text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-white rounded-md flex items-center shadow transition-colors">
+          <i class="fa-solid fa-print mr-1.5"></i>인쇄(A4)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 인쇄 전용 머리글 -->
+  <div class="print-only mb-3 text-center">
+    <h2 class="text-xl font-bold text-gray-900 tracking-wide" id="print-title">2026학년도 유치원 교육계획안</h2>
+    <p class="text-[10px] text-gray-500 mt-0.5" id="print-date"></p>
+  </div>
+
+  <!-- 메인 영역 -->
+  <main class="max-w-7xl mx-auto px-4 py-5 flex-1 w-full">
+    
+    <!-- 필터 및 날짜 이동 컨트롤러 -->
+    <div class="no-print bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 mb-1">대상 학급</label>
+          <select id="filter-target" onchange="renderCurrentView()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+            <option value="ALL">전체 학급</option>
+            <option value="만 3세">만 3세</option>
+            <option value="만 4세">만 4세</option>
+            <option value="만 5세">만 5세</option>
+            <option value="특수학급">특수학급</option>
+            <option value="전원">전체 공통</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 mb-1">업무/행사 구분</label>
+          <select id="filter-category" onchange="renderCurrentView()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+            <option value="ALL">전체 구분</option>
+            <option value="원내행사">원내행사</option>
+            <option value="현장체험">현장체험</option>
+            <option value="교무/운영">교무/운영</option>
+            <option value="연구/연수">연구/연수</option>
+            <option value="안전/보건">안전/보건</option>
+            <option value="방과후/돌봄">방과후/돌봄</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 탐색 이동 컨트롤 -->
+      <div class="flex items-center space-x-2">
+        <button type="button" onclick="navigateDate(-1)" class="cursor-pointer px-2.5 py-1.5 border border-slate-300 rounded-lg hover:bg-slate-50 text-xs text-slate-700">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span id="current-range-label" class="text-sm font-bold text-slate-800 px-2 min-w-[200px] text-center select-none">
+          2026.03 1주차
+        </span>
+        <button type="button" onclick="navigateDate(1)" class="cursor-pointer px-2.5 py-1.5 border border-slate-300 rounded-lg hover:bg-slate-50 text-xs text-slate-700">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 1. 주간 업무 화면 -->
+    <div id="view-weekly" class="space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" id="weekly-table">
+            <thead>
+              <tr class="bg-slate-100/90 text-slate-700 text-xs font-bold border-b border-slate-200 text-center">
+                <th class="py-2.5 px-3 w-28 border-r">구분</th>
+                <th class="py-2.5 px-3 border-r w-1/5" id="th-day-1">월</th>
+                <th class="py-2.5 px-3 border-r w-1/5" id="th-day-2">화</th>
+                <th class="py-2.5 px-3 border-r w-1/5" id="th-day-3">수</th>
+                <th class="py-2.5 px-3 border-r w-1/5" id="th-day-4">목</th>
+                <th class="py-2.5 px-3 w-1/5" id="th-day-5">금</th>
+              </tr>
+            </thead>
+            <tbody id="weekly-tbody" class="text-xs divide-y divide-slate-200">
+              <!-- 주간 업무 표 렌더링 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 월중 행사 화면 (달력 그리드 + 목록) -->
+    <div id="view-monthly" class="hidden space-y-6">
+      <!-- 월간 달력 그리드 -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <div class="grid grid-cols-7 border-b border-slate-200 pb-2 text-center text-xs font-bold text-slate-600 mb-1">
+          <div class="text-rose-500">일</div>
+          <div>월</div>
+          <div>화</div>
+          <div>수</div>
+          <div>목</div>
+          <div>금</div>
+          <div class="text-blue-500">토</div>
+        </div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded overflow-hidden">
+          <!-- 달력 일자별 셀 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 월간 상세 목록 테이블 -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center justify-between">
+          <span><i class="fa-solid fa-list-check text-indigo-600 mr-1.5"></i>해당 월 등록된 전체 학사일정</span>
+          <span class="text-xs font-semibold text-slate-500" id="total-count-label">총 0건</span>
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse border border-slate-200">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="py-2 px-3 border-r w-24 text-center">날짜</th>
+                <th class="py-2 px-3 border-r w-20 text-center">대상</th>
+                <th class="py-2 px-3 border-r w-24 text-center">구분</th>
+                <th class="py-2 px-3 border-r">행사 및 업무 내용</th>
+                <th class="py-2 px-3 border-r w-24 text-center">담당자</th>
+                <th class="py-2 px-3 w-16 text-center no-print">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="monthly-tbody" class="divide-y divide-slate-200">
+              <!-- 월간 목록 렌더링 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 일정 등록 모달 (기본 숨김: hidden 클래스 적용) -->
+  <div id="schedule-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center no-print">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-slate-100">
+      <div class="bg-indigo-900 px-5 py-3.5 flex justify-between items-center text-white">
+        <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-calendar-plus mr-2 text-yellow-300"></i>새 일정 등록</h3>
+        <button type="button" onclick="closeModal()" class="cursor-pointer text-indigo-200 hover:text-white text-xl font-bold px-1 leading-none">&times;</button>
+      </div>
+
+      <form id="schedule-form" onsubmit="saveSchedule(event)" class="p-5 space-y-3.5 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">날짜 *</label>
+            <input type="date" id="form-date" required class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500 bg-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">대상 학급 *</label>
+            <select id="form-target" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 bg-white">
+              <option value="전원">전체 공통</option>
+              <option value="만 3세">만 3세</option>
+              <option value="만 4세">만 4세</option>
+              <option value="만 5세">만 5세</option>
+              <option value="특수학급">특수학급</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">업무/행사 구분 *</label>
+            <select id="form-category" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 bg-white">
+              <option value="원내행사">원내행사</option>
+              <option value="현장체험">현장체험</option>
+              <option value="교무/운영">교무/운영</option>
+              <option value="연구/연수">연구/연수</option>
+              <option value="안전/보건">안전/보건</option>
+              <option value="방과후/돌봄">방과후/돌봄</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">담당 교사</label>
+            <input type="text" id="form-owner" placeholder="예: 연구교사, 꽃잎반" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">행사/업무명 *</label>
+          <input type="text" id="form-title" required placeholder="예: 1학기 입학식 및 오리엔테이션" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">상세 내용 및 협조 사항</label>
+          <textarea id="form-desc" rows="3" placeholder="시간, 장소, 준비물 및 학급별 협조사항을 적어주세요." class="w-full border border-slate-300 rounded-md px-2.5 py-1.5"></textarea>
+        </div>
+
+        <div class="pt-3 border-t flex justify-end space-x-2">
+          <button type="button" onclick="closeModal()" class="cursor-pointer px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-md">취소</button>
+          <button type="submit" class="cursor-pointer px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-md shadow">저장하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 자바스크립트 전체 로직 -->
+  <script>
+    const defaultData = [
+      { id: "1", date: "2026-03-02", target: "전원", category: "원내행사", title: "2026학년도 입학식 및 개학식", desc: "강당 10:00 진행 (원아 맞이)", owner: "교무" },
+      { id: "2", date: "2026-03-03", target: "만 5세", category: "교무/운영", title: "유아 신체계측 및 건강조사", desc: "각 반 교실 순차 진행", owner: "보건" },
+      { id: "3", date: "2026-03-04", target: "전원", category: "안전/보건", title: "재난대응 대피훈련", desc: "화재 대피 요령 교육", owner: "안전" },
+      { id: "4", date: "2026-03-05", target: "만 4세", category: "현장체험", title: "생태 텃밭 가꾸기 활동", desc: "야외 텃밭 체험", owner: "연구" }
+    ];
+
+    let schedules = [];
+    try {
+      const stored = localStorage.getItem('kg_schedules');
+      schedules = stored ? JSON.parse(stored) : defaultData;
+      if (!Array.isArray(schedules)) schedules = defaultData;
+    } catch(err) {
+      schedules = defaultData;
+    }
+
+    let currentTab = 'weekly';
+    let currentMonday = new Date(2026, 2, 2); // 2026.03.02 (월)
+    let currentCalMonth = new Date(2026, 2, 1); // 2026.03
+
+    function formatDate(d) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getMonday(dateObj) {
+      const d = new Date(dateObj);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff));
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem('kg_schedules', JSON.stringify(schedules));
+      } catch(e) {
+        console.warn('LocalStorage 저장 제한:', e);
+      }
+      renderCurrentView();
+    }
+
+    // 탭 전환
+    function switchTab(tab) {
+      currentTab = tab;
+      const btnWeekly = document.getElementById('tab-btn-weekly');
+      const btnMonthly = document.getElementById('tab-btn-monthly');
+      const viewWeekly = document.getElementById('view-weekly');
+      const viewMonthly = document.getElementById('view-monthly');
+
+      if (!btnWeekly || !btnMonthly || !viewWeekly || !viewMonthly) return;
+
+      if (tab === 'weekly') {
+        btnWeekly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow';
+        btnMonthly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-indigo-200 hover:text-white';
+        viewWeekly.classList.remove('hidden');
+        viewMonthly.classList.add('hidden');
+      } else {
+        btnMonthly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow';
+        btnWeekly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-indigo-200 hover:text-white';
+        viewMonthly.classList.remove('hidden');
+        viewWeekly.classList.add('hidden');
+      }
+      renderCurrentView();
+    }
+
+    // 날짜 이전/다음 탐색
+    function navigateDate(dir) {
+      if (currentTab === 'weekly') {
+        currentMonday.setDate(currentMonday.getDate() + (dir * 7));
+      } else {
+        currentCalMonth.setMonth(currentCalMonth.getMonth() + dir);
+      }
+      renderCurrentView();
+    }
+
+    // 현재 화면 렌더링
+    function renderCurrentView() {
+      const targetFilter = document.getElementById('filter-target').value;
+      const catFilter = document.getElementById('filter-category').value;
+
+      const filtered = schedules.filter(item => {
+        const matchTarget = (targetFilter === 'ALL' || item.target === targetFilter);
+        const matchCat = (catFilter === 'ALL' || item.category === catFilter);
+        return matchTarget && matchCat;
+      });
+
+      if (currentTab === 'weekly') {
+        renderWeeklyTable(filtered);
+      } else {
+        renderMonthlyView(filtered);
+      }
+    }
+
+    // 1. 주간 테이블 출력
+    function renderWeeklyTable(items) {
+      const days = [];
+      const dayNames = ['월', '화', '수', '목', '금'];
+
+      for (let i = 0; i < 5; i++) {
+        const d = new Date(currentMonday);
+        d.setDate(currentMonday.getDate() + i);
+        days.push(d);
+        const th = document.getElementById(`th-day-${i + 1}`);
+        if (th) {
+          th.innerHTML = `${dayNames[i]}<br><span class="font-normal text-[11px] text-slate-500">${d.getMonth() + 1}/${d.getDate()}</span>`;
+        }
+      }
+
+      const startStr = `${currentMonday.getFullYear()}.${currentMonday.getMonth() + 1}.${currentMonday.getDate()}`;
+      const endD = days[4];
+      const endStr = `${endD.getMonth() + 1}.${endD.getDate()}`;
+      document.getElementById('current-range-label').textContent = `${startStr} ~ ${endStr}`;
+      document.getElementById('print-title').textContent = `2026학년도 주간 교육활동 계획 (${startStr} ~ ${endStr})`;
+      document.getElementById('print-date').textContent = `출력일시: ${formatDate(new Date())}`;
+
+      const categories = ['원내행사', '현장체험', '교무/운영', '연구/연수', '안전/보건', '방과후/돌봄'];
+      const tbody = document.getElementById('weekly-tbody');
+      tbody.innerHTML = '';
+
+      categories.forEach(cat => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/50';
+
+        let html = `<td class="py-2.5 px-3 font-bold bg-slate-50 text-slate-700 text-center border-r">${cat}</td>`;
+
+        for (let i = 0; i < 5; i++) {
+          const dateStr = formatDate(days[i]);
+          const dayItems = items.filter(it => it.date === dateStr && it.category === cat);
+
+          html += `<td class="py-2 px-2 border-r align-top space-y-1.5 min-h-[90px]">`;
+          dayItems.forEach(it => {
+            html += `
+              <div class="bg-indigo-50/90 border border-indigo-200 rounded p-1.5 shadow-xs relative">
+                <button type="button" onclick="deleteSchedule('${it.id}')" title="삭제" class="no-print absolute top-1 right-1 text-slate-400 hover:text-rose-600 px-1 font-bold text-xs cursor-pointer">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="flex items-center space-x-1 text-[10px] text-indigo-700 font-bold mb-0.5 pr-4">
+                  <span class="bg-indigo-200/80 px-1 rounded">${it.target}</span>
+                  <span class="text-slate-500 font-normal">${it.owner || ''}</span>
+                </div>
+                <div class="font-bold text-slate-800 text-xs">${it.title}</div>
+                ${it.desc ? `<div class="text-[11px] text-slate-600 mt-0.5 leading-tight whitespace-pre-wrap">${it.desc}</div>` : ''}
+              </div>
+            `;
+          });
+          html += `</td>`;
+        }
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 2. 월간 달력 및 전체 목록 출력
+    function renderMonthlyView(items) {
+      const year = currentCalMonth.getFullYear();
+      const month = currentCalMonth.getMonth();
+
+      document.getElementById('current-range-label').textContent = `${year}년 ${month + 1}월`;
+      document.getElementById('print-title').textContent = `${year}학년도 ${month + 1}월 유치원 교육계획안`;
+      document.getElementById('print-date').textContent = `출력일시: ${formatDate(new Date())}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+
+      // 이전 달 빈 칸
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'bg-slate-50/60 min-h-[90px] cal-cell p-1.5 text-slate-300 text-xs';
+        grid.appendChild(empty);
+      }
+
+      // 1일부터 말일까지
+      for (let day = 1; day <= lastDate; day++) {
+        const currentDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayOfWeek = (firstDay + day - 1) % 7;
+        const isSun = (dayOfWeek === 0);
+        const isSat = (dayOfWeek === 6);
+
+        const dayItems = items.filter(it => it.date === currentDateStr);
+
+        const cell = document.createElement('div');
+        cell.className = 'bg-white min-h-[90px] cal-cell p-1.5 flex flex-col justify-between';
+
+        let dateClass = "font-bold text-xs";
+        if (isSun) dateClass += " text-rose-500";
+        else if (isSat) dateClass += " text-blue-500";
+        else dateClass += " text-slate-700";
+
+        let schedulesHtml = dayItems.map(it => `
+          <div class="bg-indigo-50 border border-indigo-200 rounded px-1.5 py-1 text-[11px] flex items-center justify-between">
+            <span class="truncate font-semibold text-slate-800" title="${it.title}">[${it.target}] ${it.title}</span>
+            <button type="button" onclick="deleteSchedule('${it.id}')" title="삭제" class="no-print ml-1 text-slate-400 hover:text-rose-600 font-bold cursor-pointer">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        `).join('');
+
+        cell.innerHTML = `
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="${dateClass}">${day}</span>
+              <button type="button" onclick="openModalWithDate('${currentDateStr}')" title="이 날짜에 추가" class="no-print text-[10px] text-slate-300 hover:text-indigo-600 cursor-pointer">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+            <div class="space-y-1">
+              ${schedulesHtml}
+            </div>
+          </div>
+        `;
+        grid.appendChild(cell);
+      }
+
+      // 하단 목록
+      const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+      const thisMonthItems = items.filter(it => it.date.startsWith(monthPrefix));
+      const tbody = document.getElementById('monthly-tbody');
+      tbody.innerHTML = '';
+      document.getElementById('total-count-label').textContent = `총 ${thisMonthItems.length}건`;
+
+      const sorted = [...thisMonthItems].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">등록된 일정이 없습니다.</td></tr>`;
+        return;
+      }
+
+      sorted.forEach(it => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50';
+        tr.innerHTML = `
+          <td class="py-2 px-3 border-r text-center font-medium text-slate-600">${it.date}</td>
+          <td class="py-2 px-3 border-r text-center"><span class="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-semibold text-[11px]">${it.target}</span></td>
+          <td class="py-2 px-3 border-r text-center"><span class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold text-[11px]">${it.category}</span></td>
+          <td class="py-2 px-3 border-r">
+            <span class="font-bold text-slate-800">${it.title}</span>
+            ${it.desc ? `<p class="text-slate-500 text-[11px] mt-0.5">${it.desc}</p>` : ''}
+          </td>
+          <td class="py-2 px-3 border-r text-center text-slate-600">${it.owner || '-'}</td>
+          <td class="py-2 px-3 text-center no-print">
+            <button type="button" onclick="deleteSchedule('${it.id}')" class="cursor-pointer text-rose-500 hover:text-rose-700 font-bold p-1" title="삭제">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 모달창 열기/닫기
+    function openModal() {
+      const form = document.getElementById('schedule-form');
+      if (form) form.reset();
+      const defaultDate = (currentTab === 'weekly') ? formatDate(currentMonday) : formatDate(currentCalMonth);
+      const dateInput = document.getElementById('form-date');
+      if (dateInput) dateInput.value = defaultDate;
+
+      const modal = document.getElementById('schedule-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function openModalWithDate(dateStr) {
+      const form = document.getElementById('schedule-form');
+      if (form) form.reset();
+      const dateInput = document.getElementById('form-date');
+      if (dateInput) dateInput.value = dateStr;
+
+      const modal = document.getElementById('schedule-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('schedule-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // 일정 저장
+    function saveSchedule(e) {
+      e.preventDefault();
+      const inputDateStr = document.getElementById('form-date').value;
+      if (!inputDateStr) return;
+
+      const newEntry = {
+        id: Date.now().toString(),
+        date: inputDateStr,
+        target: document.getElementById('form-target').value,
+        category: document.getElementById('form-category').value,
+        owner: document.getElementById('form-owner').value.trim(),
+        title: document.getElementById('form-title').value.trim(),
+        desc: document.getElementById('form-desc').value.trim()
+      };
+
+      schedules.push(newEntry);
+
+      const selectedDate = new Date(inputDateStr + 'T00:00:00');
+      currentMonday = getMonday(selectedDate);
+      currentCalMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+
+      saveToStorage();
+      closeModal();
+      alert(`[${newEntry.title}] 일정이 정상적으로 등록되었습니다.`);
+    }
+
+    // 일정 삭제
+    function deleteSchedule(id) {
+      const targetItem = schedules.find(it => it.id === id);
+      const title = targetItem ? `[${targetItem.title}]` : '선택한';
+
+      if (confirm(`${title} 일정을 삭제하시겠습니까?`)) {
+        schedules = schedules.filter(it => it.id !== id);
+        saveToStorage();
+      }
+    }
+
+    // 시작 시 렌더링
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCurrentView();
+    });
+  </script>
+</body>
+</html>
