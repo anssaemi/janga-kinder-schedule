@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>유치원 주간업무 & 월중행사 취합 시스템</title>
+  <title>인천장아초등학교병설유치원 주간업무 & 월중행사 취합 시스템</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome CDN -->
@@ -68,11 +68,19 @@
     <p class="text-[9px] text-gray-500 mt-0.5" id="print-date"></p>
   </div>
 
+  <!-- 인쇄 전용 공지사항 영역 -->
+  <div class="print-only mb-2 border border-slate-400 rounded p-2 bg-slate-50 text-[10px]">
+    <div class="flex items-center justify-between">
+      <span class="font-bold text-slate-800"><i class="fa-solid fa-bullhorn mr-1"></i>[공지/전달사항] <span id="print-notice-content"></span></span>
+      <span class="text-slate-600" id="print-notice-author"></span>
+    </div>
+  </div>
+
   <!-- 메인 영역 -->
   <main class="max-w-7xl mx-auto px-4 py-4 flex-1 w-full">
     
     <!-- 필터 및 날짜 이동 컨트롤러 -->
-    <div class="no-print bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="no-print bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 mb-3 flex flex-wrap items-center justify-between gap-4">
       <div class="flex flex-wrap items-center gap-3">
         <div>
           <label class="block text-[11px] font-bold text-slate-500 mb-1">대상 학급</label>
@@ -102,18 +110,43 @@
         </div>
       </div>
 
-      <!-- 날짜 이동 컨트롤 -->
+      <!-- 날짜 이동 컨트롤 & 오늘 버튼 -->
       <div class="flex items-center space-x-2">
+        <button type="button" onclick="goToToday()" class="cursor-pointer px-2.5 py-1.5 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-xs font-bold text-indigo-700 rounded-lg transition-colors">
+          오늘
+        </button>
         <button type="button" onclick="navigateDate(-1)" class="cursor-pointer px-2.5 py-1.5 border border-slate-300 rounded-lg hover:bg-slate-50 text-xs text-slate-700">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
         <span id="current-range-label" class="text-sm font-bold text-slate-800 px-2 min-w-[200px] text-center select-none">
-          2026.03 1주차
+          -
         </span>
         <button type="button" onclick="navigateDate(1)" class="cursor-pointer px-2.5 py-1.5 border border-slate-300 rounded-lg hover:bg-slate-50 text-xs text-slate-700">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </div>
+    </div>
+
+    <!-- 주간/월간 공통 공지사항 바 (컴팩트 슬림 디자인) -->
+    <div class="no-print bg-amber-50/90 border border-amber-200/90 rounded-xl px-4 py-2.5 mb-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3 flex-1 min-w-[260px]">
+        <div class="w-6 h-6 rounded-md bg-amber-200 text-amber-800 flex items-center justify-center shrink-0 text-xs">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center space-x-2">
+            <span class="text-[11px] font-bold text-amber-900 bg-amber-200/80 px-1.5 py-0.5 rounded">공지사항</span>
+            <span id="notice-author-badge" class="text-[11px] font-semibold text-slate-600">작성자: 원무실</span>
+            <span id="notice-date-badge" class="text-[10px] text-slate-400"></span>
+          </div>
+          <p id="notice-content-text" class="text-xs font-medium text-slate-800 mt-0.5 leading-snug">
+            등록된 공지사항이 없습니다.
+          </p>
+        </div>
+      </div>
+      <button type="button" onclick="openNoticeModal()" class="cursor-pointer px-2.5 py-1 text-[11px] font-bold bg-white hover:bg-amber-100/60 text-amber-900 border border-amber-300 rounded-lg transition-colors flex items-center shrink-0">
+        <i class="fa-solid fa-pen-to-square mr-1"></i>공지 수정
+      </button>
     </div>
 
     <!-- 1. 주간 업무 화면 -->
@@ -184,6 +217,33 @@
     </div>
   </main>
 
+  <!-- 공지사항 등록/수정 모달 -->
+  <div id="notice-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center no-print">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-slate-100">
+      <div class="bg-amber-600 px-5 py-3.5 flex justify-between items-center text-white">
+        <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-bullhorn mr-2"></i>공통 공지사항 작성</h3>
+        <button type="button" onclick="closeNoticeModal()" class="cursor-pointer text-amber-100 hover:text-white text-xl font-bold px-1 leading-none">&times;</button>
+      </div>
+
+      <form id="notice-form" onsubmit="saveNotice(event)" class="p-5 space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">작성자 / 부서 *</label>
+          <input type="text" id="notice-author-input" required placeholder="예: 원무실, 연구부, 안전담당" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 focus:ring-2 focus:ring-amber-500 bg-white">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">공지 및 전달 내용 *</label>
+          <textarea id="notice-content-input" required rows="3" placeholder="주간 및 월간 계획에 공통으로 전달할 중요한 공지사항을 입력하세요." class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 focus:ring-2 focus:ring-amber-500 bg-white"></textarea>
+        </div>
+
+        <div class="pt-3 border-t flex justify-end space-x-2">
+          <button type="button" onclick="closeNoticeModal()" class="cursor-pointer px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-md">취소</button>
+          <button type="submit" class="cursor-pointer px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-md shadow">저장하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- 일정 등록 모달 -->
   <div id="schedule-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center no-print">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-slate-100">
@@ -232,7 +292,7 @@
 
         <div>
           <label class="block font-bold text-slate-700 mb-1">행사/업무명 *</label>
-          <input type="text" id="form-title" required placeholder="예: 2026학년도 입학식 및 오리엔테이션" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5">
+          <input type="text" id="form-title" required placeholder="예: 2학기 현장체험학습 계획 수립" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5">
         </div>
 
         <div>
@@ -250,7 +310,6 @@
 
   <!-- 자바스크립트 전체 로직 -->
   <script>
-    // 요청하신 구분 항목 목록
     const CATEGORIES = [
       '교육행사',
       '교무',
@@ -262,26 +321,149 @@
       '복무 및 출장'
     ];
 
-    const defaultData = [
-      { id: "1", date: "2026-03-02", target: "전원", category: "교육행사", title: "2026학년도 입학식 및 개학식", desc: "강당 10:00 진행 (원아 맞이)", owner: "교무" },
-      { id: "2", date: "2026-03-03", target: "만 5세", category: "교무", title: "유아 신체계측 및 기본생활지도", desc: "각 반 교실 순차 진행", owner: "교무" },
-      { id: "3", date: "2026-03-04", target: "전원", category: "안전", title: "재난대응 대피훈련", desc: "화재 대피 요령 교육", owner: "안전" },
-      { id: "4", date: "2026-03-05", target: "만 4세", category: "연구", title: "누리과정 놀이 지원 협의회", desc: "연구실 15:30", owner: "연구" }
+    const excelSchedules = [
+      {"id":"1","date":"2026-03-01","target":"전원","category":"교육행사","owner":"","title":"삼일절","desc":"국가공휴일 / 휴업일"},
+      {"id":"2","date":"2026-03-02","target":"전원","category":"교육행사","owner":"","title":"대체공휴일","desc":"국가공휴일 / 휴업일"},
+      {"id":"3","date":"2026-03-03","target":"전원","category":"교무","owner":"교무, 학비","title":"유치원 입학식(09:30 ~ 10:00, 강당) 공연관람 10:30~11:10)","desc":""},
+      {"id":"4","date":"2026-03-12","target":"전원","category":"안전","owner":"안전","title":"화재대피훈련","desc":""},
+      {"id":"5","date":"2026-03-16","target":"특수학급","category":"특수","owner":"특수","title":"개별화교육회의( ~20일까지)","desc":""},
+      {"id":"6","date":"2026-03-16","target":"특수학급","category":"특수","owner":"특수","title":"체육수업 시작","desc":""},
+      {"id":"7","date":"2026-03-20","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(롤샌드위치만들기)","desc":""},
+      {"id":"8","date":"2026-03-23","target":"전원","category":"연구","owner":"연구","title":"1학기 학부모 상담주간(~27일 까지)","desc":""},
+      {"id":"9","date":"2026-03-25","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
+      {"id":"10","date":"2026-03-30","target":"전원","category":"정보(학비)","owner":"학비","title":"체육 휴강","desc":""},
+      {"id":"11","date":"2026-04-01","target":"전원","category":"안전","owner":"보건","title":"심폐소생술(13:30~16:30 강당)","desc":""},
+      {"id":"12","date":"2026-04-02","target":"전원","category":"교무","owner":"교무","title":"교육과정 간담회(14:30~교장실)","desc":""},
+      {"id":"13","date":"2026-04-03","target":"전원","category":"안전","owner":"안전","title":"재난대피훈련","desc":""},
+      {"id":"14","date":"2026-04-03","target":"전원","category":"방과후","owner":"","title":"방과후과정 간담회 (11:30~ 상담실)","desc":""},
+      {"id":"15","date":"2026-04-07","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(과일청만들기)","desc":""},
+      {"id":"16","date":"2026-04-10","target":"전원","category":"교육행사","owner":"안전","title":"원외체험활동(용도수목원)","desc":""},
+      {"id":"17","date":"2026-04-14","target":"전원","category":"정보(학비)","owner":"학비","title":"캠핑데이(신체활동실)","desc":""},
+      {"id":"18","date":"2026-04-16","target":"전원","category":"교무","owner":"교무","title":"학교운영위원회(3:00 ~교장실)","desc":""},
+      {"id":"19","date":"2026-04-17","target":"전원","category":"정보(학비)","owner":"학비","title":"장아산등반대회(10:00~11:30)","desc":""},
+      {"id":"20","date":"2026-04-20","target":"전원","category":"연구","owner":"연구","title":"동료장학(23일까지)","desc":""},
+      {"id":"21","date":"2026-04-22","target":"전원","category":"안전","owner":"안전","title":"인성극 관람(10:00~신체활동실)","desc":""},
+      {"id":"22","date":"2026-04-23","target":"전원","category":"안전","owner":"안전","title":"지진대피훈련","desc":""},
+      {"id":"23","date":"2026-04-24","target":"전원","category":"정보(학비)","owner":"학비","title":"숲탐험데이(9:30~11:30 장아산일대)","desc":""},
+      {"id":"24","date":"2026-04-30","target":"전원","category":"안전","owner":"안전","title":"가족참여운동회(9:30~11:30 강당)","desc":""},
+      {"id":"25","date":"2026-05-01","target":"전원","category":"교육행사","owner":"","title":"유치원 개원기념일","desc":"휴업일"},
+      {"id":"26","date":"2026-05-04","target":"전원","category":"교육행사","owner":"","title":"유치원 재량휴업일","desc":"휴업일"},
+      {"id":"27","date":"2026-05-05","target":"전원","category":"교육행사","owner":"","title":"어린이날","desc":"국가공휴일"},
+      {"id":"28","date":"2026-05-07","target":"전원","category":"정보(학비)","owner":"학비","title":"원예활동(꽃바구니만들기)","desc":""},
+      {"id":"29","date":"2026-05-12","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
+      {"id":"30","date":"2026-05-14","target":"전원","category":"정보(학비)","owner":"학비","title":"숲놀이데이(10:00~11:20 장아산 일대)","desc":""},
+      {"id":"31","date":"2026-05-19","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(우리가족얼굴 만들기)","desc":""},
+      {"id":"32","date":"2026-05-21","target":"전원","category":"정보(학비)","owner":"학비","title":"에어바운스 놀이(신체활동실)","desc":""},
+      {"id":"33","date":"2026-05-21","target":"전원","category":"연구","owner":"교사","title":"안용운 T 교간형 전학공(14:30~, 마을엔)","desc":""},
+      {"id":"34","date":"2026-05-22","target":"전원","category":"안전","owner":"안전","title":"화재대피훈련","desc":""},
+      {"id":"35","date":"2026-05-29","target":"전원","category":"정보(학비)","owner":"학비","title":"숲탐험데이(9:30~11:20 장아산 일대)","desc":""},
+      {"id":"36","date":"2026-06-02","target":"전원","category":"연구","owner":"교사","title":"이원아T 교간형 전학공(1:30 인천대공원)","desc":""},
+      {"id":"37","date":"2026-06-03","target":"전원","category":"교육행사","owner":"","title":"2026 지방선거","desc":"임시공휴일"},
+      {"id":"38","date":"2026-06-04","target":"전원","category":"정보(학비)","owner":"학비","title":"숲놀이데이(10:00~11:20 장아산 일대)","desc":""},
+      {"id":"39","date":"2026-06-05","target":"전원","category":"복무 및 출장","owner":"안전","title":"현장체험학습 답사(뽀로로키즈까페)","desc":""},
+      {"id":"40","date":"2026-06-06","target":"전원","category":"교육행사","owner":"","title":"현충일","desc":"국가공휴일"},
+      {"id":"41","date":"2026-06-09","target":"전원","category":"정보(학비)","owner":"안전/학비","title":"찾아가는 해양음악회(10:30~) / 생일축하","desc":""},
+      {"id":"42","date":"2026-06-10","target":"전원","category":"연구","owner":"교사","title":"박희주T 교간형 전학공(2:00 사리울병설)","desc":""},
+      {"id":"43","date":"2026-06-11","target":"전원","category":"연구","owner":"연구","title":"학부모 참여수업","desc":""},
+      {"id":"44","date":"2026-06-16","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(아이스크림와플)","desc":""},
+      {"id":"45","date":"2026-06-18","target":"전원","category":"안전","owner":"안전","title":"재난대피훈련","desc":""},
+      {"id":"46","date":"2026-06-19","target":"만 5세","category":"안전","owner":"안전","title":"원외체험학습(학교안전체험관)","desc":""},
+      {"id":"47","date":"2026-06-23","target":"전원","category":"연구","owner":"교사","title":"이원아T 교간형 전학공(1:30~ 소셜캠퍼스 온 인천)","desc":""},
+      {"id":"48","date":"2026-06-24","target":"전원","category":"안전","owner":"안전","title":"인성인형극","desc":""},
+      {"id":"49","date":"2026-06-26","target":"전원","category":"정보(학비)","owner":"학비","title":"숲탐험데이(10:00~11:20 장아산 일대)","desc":""},
+      {"id":"50","date":"2026-06-30","target":"전원","category":"정보(학비)","owner":"학비","title":"수박수영장 데이","desc":""},
+      {"id":"51","date":"2026-07-03","target":"전원","category":"교육행사","owner":"안전","title":"원외체험학습(뽀로로&타요 테마파크 9:00~13:00)","desc":""},
+      {"id":"52","date":"2026-07-07","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
+      {"id":"53","date":"2026-07-09","target":"전원","category":"안전","owner":"안전","title":"재난대피훈련(폭풍,홍수)","desc":""},
+      {"id":"54","date":"2026-07-10","target":"전원","category":"정보(학비)","owner":"학비","title":"에어바운스 물놀이","desc":""},
+      {"id":"55","date":"2026-07-17","target":"전원","category":"교육행사","owner":"","title":"제헌절","desc":"국경일"},
+      {"id":"56","date":"2026-07-20","target":"전원","category":"교무","owner":"교무","title":"여름방학식","desc":""},
+      {"id":"57","date":"2026-07-20","target":"전원","category":"교무","owner":"교무","title":"장애인식개선교육 공연관람(09:40~, 강당)","desc":""},
+      {"id":"58","date":"2026-08-20","target":"전원","category":"교무","owner":"교무","title":"개학식","desc":""},
+      {"id":"59","date":"2026-08-24","target":"만 5세","category":"정보(학비)","owner":"교무","title":"유초이음물놀이","desc":"만5세, 2학년"},
+      {"id":"60","date":"2026-08-25","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
+      {"id":"61","date":"2026-08-26","target":"전원","category":"안전","owner":"안전","title":"인성극관람(10:00 신체활동실)","desc":""},
+      {"id":"62","date":"2026-08-27","target":"전원","category":"안전","owner":"안전","title":"화재대피훈련","desc":""},
+      {"id":"63","date":"2026-09-01","target":"특수학급","category":"특수","owner":"특수","title":"개별화교육협의주간","desc":""},
+      {"id":"64","date":"2026-09-01","target":"전원","category":"특수","owner":"특수","title":"그림책 꼬마작가 프로젝트(09:30~, 유치원내)","desc":""},
+      {"id":"65","date":"2026-09-02","target":"전원","category":"연구","owner":"교사","title":"박희주T 교간형 전학공(2:00 마을엔)","desc":""},
+      {"id":"66","date":"2026-09-08","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
+      {"id":"67","date":"2026-09-09","target":"전원","category":"연구","owner":"연구","title":"교내형 전학공 숲이유(15:00~)","desc":""},
+      {"id":"68","date":"2026-09-10","target":"전원","category":"안전","owner":"안전","title":"지진대피 훈련(11:10~)","desc":""},
+      {"id":"69","date":"2026-09-11","target":"전원","category":"안전","owner":"안전","title":"구강건강교육(9:30~11:30)","desc":""},
+      {"id":"70","date":"2026-09-15","target":"전원","category":"연구","owner":"교사","title":"이원아 교간형 전학공(14:00~ 소셜캠퍼스 온 인천)","desc":""},
+      {"id":"71","date":"2026-09-18","target":"전원","category":"연구","owner":"연구","title":"학부모참관수업 및 학부모 연수","desc":""},
+      {"id":"72","date":"2026-09-22","target":"전원","category":"정보(학비)","owner":"학비","title":"숲놀이데이(10:00~ 장아산 일대)","desc":""},
+      {"id":"73","date":"2026-09-23","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(송편 9:30~ 각반교실)","desc":""},
+      {"id":"74","date":"2026-09-23","target":"전원","category":"연구","owner":"교사","title":"권조은 교간형 전학공","desc":""},
+      {"id":"75","date":"2026-09-24","target":"전원","category":"교육행사","owner":"","title":"추석연휴","desc":"공휴일"},
+      {"id":"76","date":"2026-09-25","target":"전원","category":"교육행사","owner":"","title":"추석","desc":"현수막 게시(25~10/4)"},
+      {"id":"77","date":"2026-09-26","target":"전원","category":"교육행사","owner":"","title":"추석연휴","desc":"공휴일"},
+      {"id":"78","date":"2026-09-28","target":"전원","category":"연구","owner":"연구","title":"2학기 학부모 상담주간","desc":""},
+      {"id":"79","date":"2026-10-02","target":"전원","category":"정보(학비)","owner":"정보","title":"숲탐험데이","desc":""},
+      {"id":"80","date":"2026-10-03","target":"전원","category":"교육행사","owner":"","title":"개천절","desc":"국가공휴일"},
+      {"id":"81","date":"2026-10-05","target":"전원","category":"교육행사","owner":"","title":"대체휴일","desc":"공휴일"},
+      {"id":"82","date":"2026-10-06","target":"전원","category":"연구","owner":"연구","title":"교내형 전학공(15:00~)","desc":""},
+      {"id":"83","date":"2026-10-07","target":"만 5세","category":"교무","owner":"교무","title":"유초이음","desc":"솔1, 2반"},
+      {"id":"84","date":"2026-10-08","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
+      {"id":"85","date":"2026-10-09","target":"전원","category":"교육행사","owner":"","title":"한글날","desc":"국가공휴일"},
+      {"id":"86","date":"2026-10-13","target":"전원","category":"정보(학비)","owner":"정보","title":"숲놀이데이","desc":""},
+      {"id":"87","date":"2026-10-14","target":"만 5세","category":"교무","owner":"교무","title":"졸업사진촬영","desc":"솔1, 2반"},
+      {"id":"88","date":"2026-10-15","target":"전원","category":"안전","owner":"안전","title":"흡연예방교육(10:00~10:40)","desc":""},
+      {"id":"89","date":"2026-10-16","target":"전원","category":"정보(학비)","owner":"정보","title":"건축놀이","desc":""},
+      {"id":"90","date":"2026-10-19","target":"전원","category":"안전","owner":"안전","title":"재난대비 훈련(감염병)","desc":""},
+      {"id":"91","date":"2026-10-22","target":"전원","category":"교육행사","owner":"안전","title":"원외체험학습(인천유아교육진흥원 9:00~13:20)","desc":""},
+      {"id":"92","date":"2026-10-26","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(감자경단)","desc":""},
+      {"id":"93","date":"2026-10-28","target":"전원","category":"교육행사","owner":"인성","title":"인성인형극 관람(10:00~)","desc":""},
+      {"id":"94","date":"2026-10-30","target":"전원","category":"정보(학비)","owner":"정보","title":"숲탐험데이","desc":""},
+      {"id":"95","date":"2026-11-02","target":"전원","category":"복무 및 출장","owner":"전체교사","title":"원외체험학습 사전답사(선학빙상장 14:30)","desc":""},
+      {"id":"96","date":"2026-11-06","target":"전원","category":"안전","owner":"안전부","title":"유아심폐소생술 교육(10:00~) 3학급 동시 진행","desc":""},
+      {"id":"97","date":"2026-11-10","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"생일축하","desc":""},
+      {"id":"98","date":"2026-11-11","target":"전원","category":"안전","owner":"안전부","title":"화재대피훈련(11:10~)","desc":""},
+      {"id":"99","date":"2026-11-13","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"장아산 등반대회","desc":""},
+      {"id":"100","date":"2026-11-17","target":"전원","category":"교육행사","owner":"","title":"강당 사용 불가","desc":""},
+      {"id":"101","date":"2026-11-20","target":"전원","category":"교육행사","owner":"안전부","title":"원외체험학습(선학빙상장)","desc":""},
+      {"id":"102","date":"2026-11-24","target":"전원","category":"연구","owner":"연구","title":"동료장학(수업나눔)","desc":""},
+      {"id":"103","date":"2026-11-25","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"요리활동(깍두기)","desc":""},
+      {"id":"104","date":"2026-11-26","target":"전원","category":"안전","owner":"안전부","title":"안전 인형극(10:30~) 안전하게 걸어야 돼요.","desc":""},
+      {"id":"105","date":"2026-11-27","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"숲탐험데이","desc":""}
     ];
 
+    const DATA_VERSION = "2026_excel_v1";
     let schedules = [];
+
     try {
-      const stored = localStorage.getItem('kg_schedules');
-      schedules = stored ? JSON.parse(stored) : defaultData;
-      if (!Array.isArray(schedules)) schedules = defaultData;
+      const storedVersion = localStorage.getItem('kg_version');
+      if (storedVersion !== DATA_VERSION) {
+        schedules = excelSchedules;
+        localStorage.setItem('kg_schedules', JSON.stringify(schedules));
+        localStorage.setItem('kg_version', DATA_VERSION);
+      } else {
+        const stored = localStorage.getItem('kg_schedules');
+        schedules = stored ? JSON.parse(stored) : excelSchedules;
+      }
     } catch(err) {
-      schedules = defaultData;
+      schedules = excelSchedules;
+    }
+
+    // 공지사항 기본값 및 불러오기
+    const defaultNotice = {
+      author: "원무실",
+      content: "2026학년도 학사일정 및 주간 교육활동 계획안을 확인해 주시기 바랍니다.",
+      updatedAt: "2026.03.02"
+    };
+    let currentNotice = defaultNotice;
+    try {
+      const storedNotice = localStorage.getItem('kg_notice');
+      if (storedNotice) {
+        currentNotice = JSON.parse(storedNotice);
+      }
+    } catch(e) {
+      currentNotice = defaultNotice;
     }
 
     let currentTab = 'weekly';
-    let currentMonday = new Date(2026, 2, 2); // 2026.03.02 (월)
-    let currentCalMonth = new Date(2026, 2, 1); // 2026.03
-
+    
     function formatDate(d) {
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -290,10 +472,21 @@
     }
 
     function getMonday(dateObj) {
-      const d = new Date(dateObj);
+      const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
       const day = d.getDay();
       const diff = d.getDate() - day + (day === 0 ? -6 : 1);
       return new Date(d.setDate(diff));
+    }
+
+    const today = new Date();
+    let currentMonday = getMonday(today);
+    let currentCalMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    function goToToday() {
+      const now = new Date();
+      currentMonday = getMonday(now);
+      currentCalMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      renderCurrentView();
     }
 
     function saveToStorage() {
@@ -303,6 +496,54 @@
         console.warn('LocalStorage 저장 실패:', e);
       }
       renderCurrentView();
+    }
+
+    // 공지사항 렌더링
+    function renderNotice() {
+      const authorBadge = document.getElementById('notice-author-badge');
+      const contentText = document.getElementById('notice-content-text');
+      const dateBadge = document.getElementById('notice-date-badge');
+      const printContent = document.getElementById('print-notice-content');
+      const printAuthor = document.getElementById('print-notice-author');
+
+      if (authorBadge) authorBadge.textContent = `작성자: ${currentNotice.author || '원무실'}`;
+      if (contentText) contentText.textContent = currentNotice.content || '등록된 공지사항이 없습니다.';
+      if (dateBadge) dateBadge.textContent = currentNotice.updatedAt ? `(${currentNotice.updatedAt})` : '';
+
+      if (printContent) printContent.textContent = currentNotice.content || '공지사항 없음';
+      if (printAuthor) printAuthor.textContent = `작성: ${currentNotice.author || '원무실'}`;
+    }
+
+    // 공지사항 모달 열기/닫기/저장
+    function openNoticeModal() {
+      document.getElementById('notice-author-input').value = currentNotice.author || '';
+      document.getElementById('notice-content-input').value = currentNotice.content || '';
+      document.getElementById('notice-modal').classList.remove('hidden');
+    }
+
+    function closeNoticeModal() {
+      document.getElementById('notice-modal').classList.add('hidden');
+    }
+
+    function saveNotice(e) {
+      e.preventDefault();
+      const authorVal = document.getElementById('notice-author-input').value.trim();
+      const contentVal = document.getElementById('notice-content-input').value.trim();
+
+      currentNotice = {
+        author: authorVal || '원무실',
+        content: contentVal,
+        updatedAt: formatDate(new Date())
+      };
+
+      try {
+        localStorage.setItem('kg_notice', JSON.stringify(currentNotice));
+      } catch(err) {
+        console.warn('공지 저장 실패:', err);
+      }
+
+      renderNotice();
+      closeNoticeModal();
     }
 
     function switchTab(tab) {
@@ -354,10 +595,11 @@
       }
     }
 
-    // 1. 주간 테이블 출력 (8개 카테고리 행)
+    // 1. 주간 테이블 출력
     function renderWeeklyTable(items) {
       const days = [];
       const dayNames = ['월', '화', '수', '목', '금'];
+      const todayStr = formatDate(new Date());
 
       for (let i = 0; i < 5; i++) {
         const d = new Date(currentMonday);
@@ -365,7 +607,9 @@
         days.push(d);
         const th = document.getElementById(`th-day-${i + 1}`);
         if (th) {
-          th.innerHTML = `${dayNames[i]}<br><span class="font-normal text-[11px] text-slate-500">${d.getMonth() + 1}/${d.getDate()}</span>`;
+          const isToday = (formatDate(d) === todayStr);
+          th.className = `py-2 px-2 border-r w-1/5 ${isToday ? 'bg-indigo-50 text-indigo-900 font-black' : ''}`;
+          th.innerHTML = `${dayNames[i]}${isToday ? ' <span class="no-print text-[10px] bg-indigo-600 text-white px-1 rounded">오늘</span>' : ''}<br><span class="font-normal text-[11px] text-slate-500">${d.getMonth() + 1}/${d.getDate()}</span>`;
         }
       }
 
@@ -373,7 +617,7 @@
       const endD = days[4];
       const endStr = `${endD.getMonth() + 1}.${endD.getDate()}`;
       document.getElementById('current-range-label').textContent = `${startStr} ~ ${endStr}`;
-      document.getElementById('print-title').textContent = `2026학년도 주간 교육활동 계획 (${startStr} ~ ${endStr})`;
+      document.getElementById('print-title').textContent = `${currentMonday.getFullYear()}학년도 주간 교육활동 계획 (${startStr} ~ ${endStr})`;
       document.getElementById('print-date').textContent = `출력일시: ${formatDate(new Date())}`;
 
       const tbody = document.getElementById('weekly-tbody');
@@ -388,8 +632,9 @@
         for (let i = 0; i < 5; i++) {
           const dateStr = formatDate(days[i]);
           const dayItems = items.filter(it => it.date === dateStr && it.category === cat);
+          const isToday = (dateStr === todayStr);
 
-          html += `<td class="py-1.5 px-2 border-r align-top space-y-1 min-h-[55px]">`;
+          html += `<td class="py-1.5 px-2 border-r align-top space-y-1 min-h-[55px] ${isToday ? 'bg-indigo-50/20' : ''}">`;
           dayItems.forEach(it => {
             html += `
               <div class="bg-indigo-50/90 border border-indigo-200 rounded p-1.5 shadow-xs relative">
@@ -416,6 +661,7 @@
     function renderMonthlyView(items) {
       const year = currentCalMonth.getFullYear();
       const month = currentCalMonth.getMonth();
+      const todayStr = formatDate(new Date());
 
       document.getElementById('current-range-label').textContent = `${year}년 ${month + 1}월`;
       document.getElementById('print-title').textContent = `${year}학년도 ${month + 1}월 유치원 교육계획안`;
@@ -438,11 +684,12 @@
         const dayOfWeek = (firstDay + day - 1) % 7;
         const isSun = (dayOfWeek === 0);
         const isSat = (dayOfWeek === 6);
+        const isToday = (currentDateStr === todayStr);
 
         const dayItems = items.filter(it => it.date === currentDateStr);
 
         const cell = document.createElement('div');
-        cell.className = 'bg-white min-h-[80px] cal-cell p-1.5 flex flex-col justify-between';
+        cell.className = `min-h-[80px] cal-cell p-1.5 flex flex-col justify-between ${isToday ? 'bg-indigo-50/40 ring-1 ring-indigo-400' : 'bg-white'}`;
 
         let dateClass = "font-bold text-xs";
         if (isSun) dateClass += " text-rose-500";
@@ -461,7 +708,10 @@
         cell.innerHTML = `
           <div>
             <div class="flex justify-between items-center mb-1">
-              <span class="${dateClass}">${day}</span>
+              <span class="${dateClass}">
+                ${day}
+                ${isToday ? '<span class="no-print ml-1 text-[9px] bg-indigo-600 text-white px-1 py-0.2 rounded font-normal">오늘</span>' : ''}
+              </span>
               <button type="button" onclick="openModalWithDate('${currentDateStr}')" title="이 날짜에 추가" class="no-print text-[10px] text-slate-300 hover:text-indigo-600 cursor-pointer">
                 <i class="fa-solid fa-plus"></i>
               </button>
@@ -483,7 +733,7 @@
       const sorted = [...thisMonthItems].sort((a, b) => new Date(a.date) - new Date(b.date));
 
       if (sorted.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">등록된 일정이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">이번 달 등록된 일정이 없습니다.</td></tr>`;
         return;
       }
 
@@ -512,7 +762,7 @@
     function openModal() {
       const form = document.getElementById('schedule-form');
       if (form) form.reset();
-      const defaultDate = (currentTab === 'weekly') ? formatDate(currentMonday) : formatDate(currentCalMonth);
+      const defaultDate = formatDate(new Date());
       const dateInput = document.getElementById('form-date');
       if (dateInput) dateInput.value = defaultDate;
 
@@ -572,6 +822,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      renderNotice();
       renderCurrentView();
     });
   </script>
