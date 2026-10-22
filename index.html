@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>인천장아초등학교병설유치원 주간업무 & 월중행사 취합 시스템</title>
+  <title>2026학년도 유치원 주간업무 & 월중행사 취합 시스템</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome CDN -->
@@ -134,7 +134,7 @@
       </div>
     </div>
 
-    <!-- 공통 공지사항 바 (기간 필터링 + 월별 초기화 연동) -->
+    <!-- 공통 공지사항 바 -->
     <div class="no-print bg-amber-50/95 border border-amber-200 rounded-xl px-4 py-2.5 mb-4 shadow-xs">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
         <div class="flex items-center space-x-2">
@@ -161,7 +161,7 @@
       </div>
     </div>
 
-    <!-- 1. 주간 업무 화면 (칸 클릭 시 해당 날짜·구분 자동 입력) -->
+    <!-- 1. 주간 업무 화면 (칸 클릭 시 등록 창 연동) -->
     <div id="view-weekly" class="space-y-4">
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
@@ -184,7 +184,7 @@
       </div>
     </div>
 
-    <!-- 2. 월중 행사 화면 (1페이지 달력, 2페이지 세부목록 인쇄 분할) -->
+    <!-- 2. 월중 행사 화면 -->
     <div id="view-monthly" class="hidden space-y-5">
       <!-- 1페이지용 월간 달력 그리드 -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 print-page-break">
@@ -348,6 +348,7 @@
 
   <!-- 자바스크립트 전체 로직 -->
   <script>
+    // '교육행사' -> '교육활동'으로 변경
     const CATEGORIES = [
       '교육활동',
       '교무',
@@ -359,6 +360,7 @@
       '복무 및 출장'
     ];
 
+    // 데이터셋 내 모든 '교육행사'를 '교육활동'으로 일괄 적용
     const excelSchedules = [
       {"id":"1","date":"2026-03-01","target":"전원","category":"교육활동","owner":"","title":"삼일절","desc":"국가공휴일 / 휴업일"},
       {"id":"2","date":"2026-03-02","target":"전원","category":"교육활동","owner":"","title":"대체공휴일","desc":"국가공휴일 / 휴업일"},
@@ -467,13 +469,25 @@
       {"id":"105","date":"2026-11-27","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"숲탐험데이","desc":""}
     ];
 
-    const DATA_VERSION = "2026_excel_v3";
+    const DATA_VERSION = "2026_excel_v4_eduact";
     let schedules = [];
 
     try {
       const storedVersion = localStorage.getItem('kg_version');
       if (storedVersion !== DATA_VERSION) {
-        schedules = excelSchedules;
+        // 새 버전 업데이트 시 기존 사용자 로컬 데이터도 '교육행사' -> '교육활동'으로 치환
+        const stored = localStorage.getItem('kg_schedules');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          schedules = parsed.map(item => {
+            if (item.category === '교육행사') {
+              return { ...item, category: '교육활동' };
+            }
+            return item;
+          });
+        } else {
+          schedules = excelSchedules;
+        }
         localStorage.setItem('kg_schedules', JSON.stringify(schedules));
         localStorage.setItem('kg_version', DATA_VERSION);
       } else {
@@ -483,6 +497,9 @@
     } catch(err) {
       schedules = excelSchedules;
     }
+
+    // 혹시라도 남아있는 '교육행사'가 있다면 즉시 '교육활동'으로 안전 보정
+    schedules = schedules.map(item => item.category === '교육행사' ? { ...item, category: '교육활동' } : item);
 
     const initialNoticeList = [
       {
@@ -729,7 +746,7 @@
       }
     }
 
-    // 1. 주간 테이블 출력 (칸 클릭 시 해당 날짜 및 구분 세팅하여 등록 창 열기)
+    // 1. 주간 테이블 출력
     function renderWeeklyTable(items) {
       const days = [];
       const dayNames = ['월', '화', '수', '목', '금'];
@@ -768,14 +785,12 @@
           const dayItems = items.filter(it => it.date === dateStr && it.category === cat);
           const isToday = (dateStr === todayStr);
 
-          // td 클릭 시 해당 날짜와 카테고리를 가진 등록 창 팝업 호출
           html += `
             <td onclick="openCreateModalWithDateAndCat('${dateStr}', '${cat}')" 
                 title="${dateStr} [${cat}] 클릭하여 새 일정 등록"
                 class="cursor-pointer py-1.5 px-2 border-r align-top space-y-1 min-h-[55px] ${isToday ? 'bg-indigo-50/20' : ''} hover:bg-indigo-50/60 transition-colors relative group">
           `;
 
-          // 일정이 없을 때 호버 시 작은 + 아이콘 힌트 표시
           if (dayItems.length === 0) {
             html += `
               <div class="h-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 text-xs no-print">
@@ -877,6 +892,7 @@
         grid.appendChild(cell);
       }
 
+      // 하단 세부 목록
       const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
       const thisMonthItems = items.filter(it => it.date.startsWith(monthPrefix));
       const tbody = document.getElementById('monthly-tbody');
@@ -912,7 +928,6 @@
       });
     }
 
-    // 기본 일정 등록 모달 열기
     function openCreateModal() {
       const form = document.getElementById('schedule-form');
       if (form) form.reset();
@@ -937,7 +952,6 @@
       document.getElementById('form-date').value = dateStr;
     }
 
-    // 주간업무 칸 클릭 시 날짜 + 부서(구분)를 자동으로 세팅하여 등록 창 열기
     function openCreateModalWithDateAndCat(dateStr, categoryStr) {
       openCreateModal();
       document.getElementById('form-date').value = dateStr;
@@ -946,7 +960,6 @@
       }
     }
 
-    // 일정 클릭 시 수정 창 열기
     function openEditModal(id) {
       const item = schedules.find(it => it.id === id);
       if (!item) return;
@@ -955,7 +968,7 @@
       document.getElementById('form-edit-id').value = item.id;
       document.getElementById('form-date').value = item.date;
       document.getElementById('form-target').value = item.target || "전원";
-      document.getElementById('form-category').value = item.category || "교육활동";
+      document.getElementById('form-category').value = (item.category === '교육행사' ? '교육활동' : item.category) || "교육활동";
       document.getElementById('form-owner').value = item.owner || "";
       document.getElementById('form-title').value = item.title || "";
       document.getElementById('form-desc').value = item.desc || "";
