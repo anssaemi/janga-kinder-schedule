@@ -105,7 +105,7 @@
           <label class="block text-[11px] font-bold text-slate-500 mb-1">업무/행사 구분</label>
           <select id="filter-category" onchange="renderCurrentView()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 bg-slate-50">
             <option value="ALL">전체 구분</option>
-            <option value="교육행사">교육행사</option>
+            <option value="교육활동">교육활동</option>
             <option value="교무">교무</option>
             <option value="연구">연구</option>
             <option value="정보(학비)">정보(학비)</option>
@@ -305,7 +305,7 @@
           <div>
             <label class="block font-bold text-slate-700 mb-1">업무/행사 구분 *</label>
             <select id="form-category" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 bg-white">
-              <option value="교육행사">교육행사</option>
+              <option value="교육활동">교육활동</option>
               <option value="교무">교무</option>
               <option value="연구">연구</option>
               <option value="정보(학비)">정보(학비)</option>
@@ -349,7 +349,7 @@
   <!-- 자바스크립트 전체 로직 -->
   <script>
     const CATEGORIES = [
-      '교육행사',
+      '교육활동',
       '교무',
       '연구',
       '정보(학비)',
@@ -360,8 +360,8 @@
     ];
 
     const excelSchedules = [
-      {"id":"1","date":"2026-03-01","target":"전원","category":"교육행사","owner":"","title":"삼일절","desc":"국가공휴일 / 휴업일"},
-      {"id":"2","date":"2026-03-02","target":"전원","category":"교육행사","owner":"","title":"대체공휴일","desc":"국가공휴일 / 휴업일"},
+      {"id":"1","date":"2026-03-01","target":"전원","category":"교육활동","owner":"","title":"삼일절","desc":"국가공휴일 / 휴업일"},
+      {"id":"2","date":"2026-03-02","target":"전원","category":"교육활동","owner":"","title":"대체공휴일","desc":"국가공휴일 / 휴업일"},
       {"id":"3","date":"2026-03-03","target":"전원","category":"교무","owner":"교무, 학비","title":"유치원 입학식(09:30 ~ 10:00, 강당) 공연관람 10:30~11:10)","desc":""},
       {"id":"4","date":"2026-03-12","target":"전원","category":"안전","owner":"안전","title":"화재대피훈련","desc":""},
       {"id":"5","date":"2026-03-16","target":"특수학급","category":"특수","owner":"특수","title":"개별화교육회의( ~20일까지)","desc":""},
@@ -375,7 +375,7 @@
       {"id":"13","date":"2026-04-03","target":"전원","category":"안전","owner":"안전","title":"재난대피훈련","desc":""},
       {"id":"14","date":"2026-04-03","target":"전원","category":"방과후","owner":"","title":"방과후과정 간담회 (11:30~ 상담실)","desc":""},
       {"id":"15","date":"2026-04-07","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(과일청만들기)","desc":""},
-      {"id":"16","date":"2026-04-10","target":"전원","category":"교육행사","owner":"안전","title":"원외체험활동(용도수목원)","desc":""},
+      {"id":"16","date":"2026-04-10","target":"전원","category":"교육활동","owner":"안전","title":"원외체험활동(용도수목원)","desc":""},
       {"id":"17","date":"2026-04-14","target":"전원","category":"정보(학비)","owner":"학비","title":"캠핑데이(신체활동실)","desc":""},
       {"id":"18","date":"2026-04-16","target":"전원","category":"교무","owner":"교무","title":"학교운영위원회(3:00 ~교장실)","desc":""},
       {"id":"19","date":"2026-04-17","target":"전원","category":"정보(학비)","owner":"학비","title":"장아산등반대회(10:00~11:30)","desc":""},
@@ -384,9 +384,9 @@
       {"id":"22","date":"2026-04-23","target":"전원","category":"안전","owner":"안전","title":"지진대피훈련","desc":""},
       {"id":"23","date":"2026-04-24","target":"전원","category":"정보(학비)","owner":"학비","title":"숲탐험데이(9:30~11:30 장아산일대)","desc":""},
       {"id":"24","date":"2026-04-30","target":"전원","category":"안전","owner":"안전","title":"가족참여운동회(9:30~11:30 강당)","desc":""},
-      {"id":"25","date":"2026-05-01","target":"전원","category":"교육행사","owner":"","title":"유치원 개원기념일","desc":"휴업일"},
-      {"id":"26","date":"2026-05-04","target":"전원","category":"교육행사","owner":"","title":"유치원 재량휴업일","desc":"휴업일"},
-      {"id":"27","date":"2026-05-05","target":"전원","category":"교육행사","owner":"","title":"어린이날","desc":"국가공휴일"},
+      {"id":"25","date":"2026-05-01","target":"전원","category":"교육활동","owner":"","title":"유치원 개원기념일","desc":"휴업일"},
+      {"id":"26","date":"2026-05-04","target":"전원","category":"교육활동","owner":"","title":"유치원 재량휴업일","desc":"휴업일"},
+      {"id":"27","date":"2026-05-05","target":"전원","category":"교육활동","owner":"","title":"어린이날","desc":"국가공휴일"},
       {"id":"28","date":"2026-05-07","target":"전원","category":"정보(학비)","owner":"학비","title":"원예활동(꽃바구니만들기)","desc":""},
       {"id":"29","date":"2026-05-12","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
       {"id":"30","date":"2026-05-14","target":"전원","category":"정보(학비)","owner":"학비","title":"숲놀이데이(10:00~11:20 장아산 일대)","desc":""},
@@ -396,10 +396,10 @@
       {"id":"34","date":"2026-05-22","target":"전원","category":"안전","owner":"안전","title":"화재대피훈련","desc":""},
       {"id":"35","date":"2026-05-29","target":"전원","category":"정보(학비)","owner":"학비","title":"숲탐험데이(9:30~11:20 장아산 일대)","desc":""},
       {"id":"36","date":"2026-06-02","target":"전원","category":"연구","owner":"교사","title":"이원아T 교간형 전학공(1:30 인천대공원)","desc":""},
-      {"id":"37","date":"2026-06-03","target":"전원","category":"교육행사","owner":"","title":"2026 지방선거","desc":"임시공휴일"},
+      {"id":"37","date":"2026-06-03","target":"전원","category":"교육활동","owner":"","title":"2026 지방선거","desc":"임시공휴일"},
       {"id":"38","date":"2026-06-04","target":"전원","category":"정보(학비)","owner":"학비","title":"숲놀이데이(10:00~11:20 장아산 일대)","desc":""},
       {"id":"39","date":"2026-06-05","target":"전원","category":"복무 및 출장","owner":"안전","title":"현장체험학습 답사(뽀로로키즈까페)","desc":""},
-      {"id":"40","date":"2026-06-06","target":"전원","category":"교육행사","owner":"","title":"현충일","desc":"국가공휴일"},
+      {"id":"40","date":"2026-06-06","target":"전원","category":"교육활동","owner":"","title":"현충일","desc":"국가공휴일"},
       {"id":"41","date":"2026-06-09","target":"전원","category":"정보(학비)","owner":"안전/학비","title":"찾아가는 해양음악회(10:30~) / 생일축하","desc":""},
       {"id":"42","date":"2026-06-10","target":"전원","category":"연구","owner":"교사","title":"박희주T 교간형 전학공(2:00 사리울병설)","desc":""},
       {"id":"43","date":"2026-06-11","target":"전원","category":"연구","owner":"연구","title":"학부모 참여수업","desc":""},
@@ -410,11 +410,11 @@
       {"id":"48","date":"2026-06-24","target":"전원","category":"안전","owner":"안전","title":"인성인형극","desc":""},
       {"id":"49","date":"2026-06-26","target":"전원","category":"정보(학비)","owner":"학비","title":"숲탐험데이(10:00~11:20 장아산 일대)","desc":""},
       {"id":"50","date":"2026-06-30","target":"전원","category":"정보(학비)","owner":"학비","title":"수박수영장 데이","desc":""},
-      {"id":"51","date":"2026-07-03","target":"전원","category":"교육행사","owner":"안전","title":"원외체험학습(뽀로로&타요 테마파크 9:00~13:00)","desc":""},
+      {"id":"51","date":"2026-07-03","target":"전원","category":"교육활동","owner":"안전","title":"원외체험학습(뽀로로&타요 테마파크 9:00~13:00)","desc":""},
       {"id":"52","date":"2026-07-07","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
       {"id":"53","date":"2026-07-09","target":"전원","category":"안전","owner":"안전","title":"재난대피훈련(폭풍,홍수)","desc":""},
       {"id":"54","date":"2026-07-10","target":"전원","category":"정보(학비)","owner":"학비","title":"에어바운스 물놀이","desc":""},
-      {"id":"55","date":"2026-07-17","target":"전원","category":"교육행사","owner":"","title":"제헌절","desc":"국경일"},
+      {"id":"55","date":"2026-07-17","target":"전원","category":"교육활동","owner":"","title":"제헌절","desc":"국경일"},
       {"id":"56","date":"2026-07-20","target":"전원","category":"교무","owner":"교무","title":"여름방학식","desc":""},
       {"id":"57","date":"2026-07-20","target":"전원","category":"교무","owner":"교무","title":"장애인식개선교육 공연관람(09:40~, 강당)","desc":""},
       {"id":"58","date":"2026-08-20","target":"전원","category":"교무","owner":"교무","title":"개학식","desc":""},
@@ -434,33 +434,33 @@
       {"id":"72","date":"2026-09-22","target":"전원","category":"정보(학비)","owner":"학비","title":"숲놀이데이(10:00~ 장아산 일대)","desc":""},
       {"id":"73","date":"2026-09-23","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(송편 9:30~ 각반교실)","desc":""},
       {"id":"74","date":"2026-09-23","target":"전원","category":"연구","owner":"교사","title":"권조은 교간형 전학공","desc":""},
-      {"id":"75","date":"2026-09-24","target":"전원","category":"교육행사","owner":"","title":"추석연휴","desc":"공휴일"},
-      {"id":"76","date":"2026-09-25","target":"전원","category":"교육행사","owner":"","title":"추석","desc":"현수막 게시(25~10/4)"},
-      {"id":"77","date":"2026-09-26","target":"전원","category":"교육행사","owner":"","title":"추석연휴","desc":"공휴일"},
+      {"id":"75","date":"2026-09-24","target":"전원","category":"교육활동","owner":"","title":"추석연휴","desc":"공휴일"},
+      {"id":"76","date":"2026-09-25","target":"전원","category":"교육활동","owner":"","title":"추석","desc":"현수막 게시(25~10/4)"},
+      {"id":"77","date":"2026-09-26","target":"전원","category":"교육활동","owner":"","title":"추석연휴","desc":"공휴일"},
       {"id":"78","date":"2026-09-28","target":"전원","category":"연구","owner":"연구","title":"2학기 학부모 상담주간","desc":""},
       {"id":"79","date":"2026-10-02","target":"전원","category":"정보(학비)","owner":"정보","title":"숲탐험데이","desc":""},
-      {"id":"80","date":"2026-10-03","target":"전원","category":"교육행사","owner":"","title":"개천절","desc":"국가공휴일"},
-      {"id":"81","date":"2026-10-05","target":"전원","category":"교육행사","owner":"","title":"대체휴일","desc":"공휴일"},
+      {"id":"80","date":"2026-10-03","target":"전원","category":"교육활동","owner":"","title":"개천절","desc":"국가공휴일"},
+      {"id":"81","date":"2026-10-05","target":"전원","category":"교육활동","owner":"","title":"대체휴일","desc":"공휴일"},
       {"id":"82","date":"2026-10-06","target":"전원","category":"연구","owner":"연구","title":"교내형 전학공(15:00~)","desc":""},
       {"id":"83","date":"2026-10-07","target":"만 5세","category":"교무","owner":"교무","title":"유초이음","desc":"솔1, 2반"},
       {"id":"84","date":"2026-10-08","target":"전원","category":"정보(학비)","owner":"학비","title":"생일축하","desc":""},
-      {"id":"85","date":"2026-10-09","target":"전원","category":"교육행사","owner":"","title":"한글날","desc":"국가공휴일"},
+      {"id":"85","date":"2026-10-09","target":"전원","category":"교육활동","owner":"","title":"한글날","desc":"국가공휴일"},
       {"id":"86","date":"2026-10-13","target":"전원","category":"정보(학비)","owner":"정보","title":"숲놀이데이","desc":""},
       {"id":"87","date":"2026-10-14","target":"만 5세","category":"교무","owner":"교무","title":"졸업사진촬영","desc":"솔1, 2반"},
       {"id":"88","date":"2026-10-15","target":"전원","category":"안전","owner":"안전","title":"흡연예방교육(10:00~10:40)","desc":""},
       {"id":"89","date":"2026-10-16","target":"전원","category":"정보(학비)","owner":"정보","title":"건축놀이","desc":""},
       {"id":"90","date":"2026-10-19","target":"전원","category":"안전","owner":"안전","title":"재난대비 훈련(감염병)","desc":""},
-      {"id":"91","date":"2026-10-22","target":"전원","category":"교육행사","owner":"안전","title":"원외체험학습(인천유아교육진흥원 9:00~13:20)","desc":""},
+      {"id":"91","date":"2026-10-22","target":"전원","category":"교육활동","owner":"안전","title":"원외체험학습(인천유아교육진흥원 9:00~13:20)","desc":""},
       {"id":"92","date":"2026-10-26","target":"전원","category":"정보(학비)","owner":"학비","title":"요리활동(감자경단)","desc":""},
-      {"id":"93","date":"2026-10-28","target":"전원","category":"교육행사","owner":"인성","title":"인성인형극 관람(10:00~)","desc":""},
+      {"id":"93","date":"2026-10-28","target":"전원","category":"교육활동","owner":"인성","title":"인성인형극 관람(10:00~)","desc":""},
       {"id":"94","date":"2026-10-30","target":"전원","category":"정보(학비)","owner":"정보","title":"숲탐험데이","desc":""},
       {"id":"95","date":"2026-11-02","target":"전원","category":"복무 및 출장","owner":"전체교사","title":"원외체험학습 사전답사(선학빙상장 14:30)","desc":""},
       {"id":"96","date":"2026-11-06","target":"전원","category":"안전","owner":"안전부","title":"유아심폐소생술 교육(10:00~) 3학급 동시 진행","desc":""},
       {"id":"97","date":"2026-11-10","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"생일축하","desc":""},
       {"id":"98","date":"2026-11-11","target":"전원","category":"안전","owner":"안전부","title":"화재대피훈련(11:10~)","desc":""},
       {"id":"99","date":"2026-11-13","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"장아산 등반대회","desc":""},
-      {"id":"100","date":"2026-11-17","target":"전원","category":"교육행사","owner":"","title":"강당 사용 불가","desc":""},
-      {"id":"101","date":"2026-11-20","target":"전원","category":"교육행사","owner":"안전부","title":"원외체험학습(선학빙상장)","desc":""},
+      {"id":"100","date":"2026-11-17","target":"전원","category":"교육활동","owner":"","title":"강당 사용 불가","desc":""},
+      {"id":"101","date":"2026-11-20","target":"전원","category":"교육활동","owner":"안전부","title":"원외체험학습(선학빙상장)","desc":""},
       {"id":"102","date":"2026-11-24","target":"전원","category":"연구","owner":"연구","title":"동료장학(수업나눔)","desc":""},
       {"id":"103","date":"2026-11-25","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"요리활동(깍두기)","desc":""},
       {"id":"104","date":"2026-11-26","target":"전원","category":"안전","owner":"안전부","title":"안전 인형극(10:30~) 안전하게 걸어야 돼요.","desc":""},
@@ -921,7 +921,7 @@
       const defaultDate = formatDate(new Date());
       document.getElementById('form-date').value = defaultDate;
       document.getElementById('form-target').value = "전원";
-      document.getElementById('form-category').value = "교육행사";
+      document.getElementById('form-category').value = "교육활동";
 
       document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-calendar-plus mr-2 text-yellow-300"></i>새 일정 등록`;
       document.getElementById('modal-header-bg').className = "bg-indigo-900 px-5 py-3.5 flex justify-between items-center text-white";
@@ -955,7 +955,7 @@
       document.getElementById('form-edit-id').value = item.id;
       document.getElementById('form-date').value = item.date;
       document.getElementById('form-target').value = item.target || "전원";
-      document.getElementById('form-category').value = item.category || "교육행사";
+      document.getElementById('form-category').value = item.category || "교육활동";
       document.getElementById('form-owner').value = item.owner || "";
       document.getElementById('form-title').value = item.title || "";
       document.getElementById('form-desc').value = item.desc || "";
