@@ -23,7 +23,6 @@
       table { border-collapse: collapse !important; width: 100% !important; }
       th, td { border: 1px solid #4b5563 !important; }
       .cal-cell { min-height: 68px !important; }
-
       .print-page-break {
         page-break-after: always !important;
         break-after: page !important;
@@ -38,7 +37,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
 
-  <!-- 헤더 (네비게이션 & 주요 액션) -->
+  <!-- 헤더 -->
   <header class="bg-indigo-900 text-white shadow-md no-print sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
       <div class="flex items-center space-x-3">
@@ -48,12 +47,11 @@
         <div>
           <div class="flex items-center space-x-2">
             <h1 class="text-lg font-bold tracking-tight">유치원 교육활동 & 월중행사 취합 시스템</h1>
-            <!-- 실시간 동기화 상태 표시 뱃지 -->
-            <span id="sync-status-badge" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full flex items-center">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>실시간 동기화 중
+            <span id="sync-status-badge" class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full flex items-center">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1"></span>동기화 준비 중
             </span>
           </div>
-          <p class="text-xs text-indigo-300">2026학년도 주간·월간 학사일정 아카이브 (클라우드 연동)</p>
+          <p class="text-xs text-indigo-300">2026학년도 주간·월간 학사일정 아카이브</p>
         </div>
       </div>
 
@@ -85,7 +83,6 @@
     <p class="text-[9px] text-gray-500 mt-0.5" id="print-date"></p>
   </div>
 
-  <!-- 인쇄 전용 공지사항 영역 -->
   <div id="print-notice-box" class="print-only mb-2 border border-slate-400 rounded p-2 bg-slate-50 text-[10px]">
     <div class="font-bold text-slate-800 mb-0.5"><i class="fa-solid fa-bullhorn mr-1"></i>[주요 공지 및 전달사항]</div>
     <div id="print-notice-list" class="space-y-0.5 pl-2"></div>
@@ -164,9 +161,7 @@
           </button>
         </div>
       </div>
-      <div id="notice-list-container" class="space-y-1.5 pt-1 border-t border-amber-200/70">
-        <!-- JS로 동적 렌더링 -->
-      </div>
+      <div id="notice-list-container" class="space-y-1.5 pt-1 border-t border-amber-200/70"></div>
     </div>
 
     <!-- 1. 주간 업무 화면 -->
@@ -184,9 +179,7 @@
                 <th class="py-2 px-2 w-1/5" id="th-day-5">금</th>
               </tr>
             </thead>
-            <tbody id="weekly-tbody" class="text-xs divide-y divide-slate-200">
-              <!-- 주간 업무 표 렌더링 -->
-            </tbody>
+            <tbody id="weekly-tbody" class="text-xs divide-y divide-slate-200"></tbody>
           </table>
         </div>
       </div>
@@ -204,9 +197,7 @@
           <div>금</div>
           <div class="text-blue-500">토</div>
         </div>
-        <div id="calendar-grid" class="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded overflow-hidden">
-          <!-- 달력 일자별 셀 렌더링 -->
-        </div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded overflow-hidden"></div>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 print-avoid-break">
@@ -229,16 +220,14 @@
                 <th class="py-2 px-3 w-16 text-center no-print">삭제</th>
               </tr>
             </thead>
-            <tbody id="monthly-tbody" class="divide-y divide-slate-200">
-              <!-- 월간 목록 렌더링 -->
-            </tbody>
+            <tbody id="monthly-tbody" class="divide-y divide-slate-200"></tbody>
           </table>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- 공지사항 등록 및 수정 모달 -->
+  <!-- 공지사항 모달 -->
   <div id="notice-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center no-print">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-slate-100">
       <div id="notice-modal-header" class="bg-amber-600 px-5 py-3.5 flex justify-between items-center text-white">
@@ -248,7 +237,6 @@
 
       <form id="notice-form" onsubmit="handleNoticeFormSubmit(event)" class="p-5 space-y-3.5 text-xs">
         <input type="hidden" id="notice-edit-id" value="">
-
         <div>
           <label class="block font-bold text-slate-700 mb-1">작성자 / 부서</label>
           <input type="text" id="notice-author-input" placeholder="예: 원무실, 연구부, 교사명 등 (생략 가능)" class="w-full border border-slate-300 rounded-md px-2.5 py-1.5 focus:ring-2 focus:ring-amber-500 bg-white">
@@ -361,12 +349,19 @@
     </div>
   </div>
 
-  <!-- 자바스크립트 전체 로직 (Supabase Realtime 연동) -->
+  <!-- 자바스크립트 전체 로직 -->
   <script>
-    // Supabase 설정 연동
     const SUPABASE_URL = "https://cxmlnghfwbzvznahdsey.supabase.co";
     const SUPABASE_KEY = "sb_publishable_YLeVQ0aWv53Ac-hlzaoE6g_kZ74S1bx";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let supabase = null;
+
+    try {
+      if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    } catch (e) {
+      console.warn("Supabase 초기화 예외:", e);
+    }
 
     const CATEGORIES = [
       '교육활동',
@@ -379,7 +374,6 @@
       '복무 및 출장'
     ];
 
-    // 초기 시드 데이터 (3월~11월 105건 엑셀 학사일정)
     const initialExcelSchedules = [
       {"id":"1","date":"2026-03-01","target":"전원","category":"교육활동","owner":"","title":"삼일절","desc":"국가공휴일 / 휴업일"},
       {"id":"2","date":"2026-03-02","target":"전원","category":"교육활동","owner":"","title":"대체공휴일","desc":"국가공휴일 / 휴업일"},
@@ -488,8 +482,16 @@
       {"id":"105","date":"2026-11-27","target":"전원","category":"정보(학비)","owner":"정보/학비","title":"숲탐험데이","desc":""}
     ];
 
-    let schedules = [];
-    let notices = [];
+    let schedules = [...initialExcelSchedules];
+    let notices = [
+      {
+        id: "n1",
+        author: "원무실",
+        content: "2026학년도 1학기 신학기 유아 적응지도 및 학사일정을 확인해 주시기 바랍니다.",
+        start_date: "2026-03-01",
+        end_date: "2026-03-31"
+      }
+    ];
     let showAllNotices = false;
     let currentTab = 'weekly';
 
@@ -518,72 +520,66 @@
       renderCurrentView();
     }
 
-    // 1. Supabase에서 일정 가져오기 (DB가 비었을 시 105개 자동 초기화)
+    // 서버 일정 가져오기
     async function fetchSchedules() {
+      if (!supabase) return;
       try {
         const { data, error } = await supabase.from('schedules').select('*');
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-          // 서버에 데이터가 없으면 기존 엑셀 데이터를 Supabase로 일괄 업로드
-          console.log("Supabase 초기 데이터 업로드 중...");
-          const { error: insertErr } = await supabase.from('schedules').insert(initialExcelSchedules);
-          if (insertErr) console.warn("초기 업로드 에러:", insertErr);
-          schedules = initialExcelSchedules;
-        } else {
-          schedules = data;
+        if (!error && data) {
+          if (data.length === 0) {
+            await supabase.from('schedules').insert(initialExcelSchedules);
+            schedules = [...initialExcelSchedules];
+          } else {
+            schedules = data;
+          }
+          renderCurrentView();
         }
-        renderCurrentView();
       } catch (err) {
-        console.error("일정 불러오기 실패:", err);
+        console.warn("서버 동기화 대기 중:", err);
       }
     }
 
-    // 2. Supabase에서 공지사항 가져오기
+    // 서버 공지 가져오기
     async function fetchNotices() {
+      if (!supabase) return;
       try {
         const { data, error } = await supabase.from('notices').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-          const defaultNotice = {
-            id: "n_" + Date.now(),
-            author: "원무실",
-            content: "2026학년도 1학기 신학기 유아 적응지도 및 학사일정을 확인해 주시기 바랍니다.",
-            start_date: "2026-03-01",
-            end_date: "2026-03-31"
-          };
-          await supabase.from('notices').insert([defaultNotice]);
-          notices = [defaultNotice];
-        } else {
-          notices = data;
+        if (!error && data) {
+          if (data.length === 0) {
+            await supabase.from('notices').insert(notices);
+          } else {
+            notices = data;
+          }
+          renderNotices();
         }
-        renderNotices();
       } catch (err) {
-        console.error("공지 불러오기 실패:", err);
+        console.warn("공지 동기화 대기 중:", err);
       }
     }
 
-    // 3. Supabase Realtime 리스너 등록 (다른 사람이 입력/수정/삭제 시 자동 반영)
+    // 실시간 구독 설정
     function setupRealtimeSubscriptions() {
-      supabase
-        .channel('schema-db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => {
-          fetchSchedules();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'notices' }, () => {
-          fetchNotices();
-        })
-        .subscribe((status) => {
-          const badge = document.getElementById('sync-status-badge');
-          if (status === 'SUBSCRIBED') {
-            badge.className = "text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full flex items-center";
-            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>실시간 동기화 중`;
-          } else {
-            badge.className = "text-[10px] bg-amber-500/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full flex items-center";
-            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1"></span>연결 대기 중`;
-          }
-        });
+      if (!supabase) return;
+      try {
+        supabase
+          .channel('schema-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => {
+            fetchSchedules();
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'notices' }, () => {
+            fetchNotices();
+          })
+          .subscribe((status) => {
+            const badge = document.getElementById('sync-status-badge');
+            if (!badge) return;
+            if (status === 'SUBSCRIBED') {
+              badge.className = "text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full flex items-center";
+              badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>실시간 동기화 중`;
+            }
+          });
+      } catch (e) {
+        console.warn("실시간 구독 설정 건너뜀:", e);
+      }
     }
 
     function toggleNoticeFilter() {
@@ -643,8 +639,8 @@
       }
 
       visibleNotices.forEach(n => {
-        const sDate = n.start_date || n.startDate;
-        const eDate = n.end_date || n.endDate;
+        const sDate = n.start_date || n.startDate || '';
+        const eDate = n.end_date || n.endDate || '';
         const item = document.createElement('div');
         item.className = "flex items-start justify-between gap-2 py-1 text-xs border-b border-amber-200/40 last:border-0 hover:bg-amber-100/50 rounded px-1.5 transition-colors cursor-pointer group";
         item.title = "클릭하여 공지사항 수정";
@@ -720,7 +716,6 @@
       document.getElementById('notice-modal').classList.add('hidden');
     }
 
-    // 공지 저장 (Supabase Upsert)
     async function handleNoticeFormSubmit(e) {
       e.preventDefault();
       const editId = document.getElementById('notice-edit-id').value;
@@ -744,14 +739,21 @@
         end_date: endDate
       };
 
-      try {
-        const { error } = await supabase.from('notices').upsert(noticePayload);
-        if (error) throw error;
-        closeNoticeModal();
-        await fetchNotices();
-      } catch (err) {
-        alert("공지 저장 실패: " + err.message);
+      if (supabase) {
+        try {
+          await supabase.from('notices').upsert(noticePayload);
+        } catch (err) {
+          console.warn(err);
+        }
       }
+
+      const idx = notices.findIndex(n => n.id === noticePayload.id);
+      if (idx !== -1) notices[idx] = noticePayload;
+      else notices.unshift(noticePayload);
+
+      renderNotices();
+      closeNoticeModal();
+      fetchNotices();
     }
 
     async function handleNoticeModalDelete() {
@@ -763,13 +765,16 @@
 
     async function deleteNotice(id) {
       if (confirm('이 공지사항을 삭제하시겠습니까?')) {
-        try {
-          const { error } = await supabase.from('notices').delete().eq('id', id);
-          if (error) throw error;
-          await fetchNotices();
-        } catch (err) {
-          alert("공지 삭제 실패: " + err.message);
+        if (supabase) {
+          try {
+            await supabase.from('notices').delete().eq('id', id);
+          } catch (err) {
+            console.warn(err);
+          }
         }
+        notices = notices.filter(n => n.id !== id);
+        renderNotices();
+        fetchNotices();
       }
     }
 
@@ -806,8 +811,8 @@
     }
 
     function renderCurrentView() {
-      const targetFilter = document.getElementById('filter-target').value;
-      const catFilter = document.getElementById('filter-category').value;
+      const targetFilter = document.getElementById('filter-target')?.value || 'ALL';
+      const catFilter = document.getElementById('filter-category')?.value || 'ALL';
 
       const filtered = schedules.filter(item => {
         const matchTarget = (targetFilter === 'ALL' || item.target === targetFilter);
@@ -824,7 +829,6 @@
       }
     }
 
-    // 주간 테이블 출력
     function renderWeeklyTable(items) {
       const days = [];
       const dayNames = ['월', '화', '수', '목', '금'];
@@ -850,6 +854,7 @@
       document.getElementById('print-date').textContent = `출력일시: ${formatDate(new Date())}`;
 
       const tbody = document.getElementById('weekly-tbody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
       CATEGORIES.forEach(cat => {
@@ -901,7 +906,6 @@
       });
     }
 
-    // 월간 달력 및 전체 목록 출력
     function renderMonthlyView(items) {
       const year = currentCalMonth.getFullYear();
       const month = currentCalMonth.getMonth();
@@ -917,6 +921,7 @@
       const lastDate = new Date(year, month + 1, 0).getDate();
 
       const grid = document.getElementById('calendar-grid');
+      if (!grid) return;
       grid.innerHTML = '';
 
       for (let i = 0; i < firstDay; i++) {
@@ -970,10 +975,10 @@
         grid.appendChild(cell);
       }
 
-      // 하단 세부 목록
       const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
       const thisMonthItems = items.filter(it => it.date.startsWith(monthPrefix));
       const tbody = document.getElementById('monthly-tbody');
+      if (!tbody) return;
       tbody.innerHTML = '';
       document.getElementById('total-count-label').textContent = `총 ${thisMonthItems.length}건`;
 
@@ -1064,7 +1069,6 @@
       document.getElementById('schedule-modal').classList.add('hidden');
     }
 
-    // 일정 저장 (Supabase Upsert)
     async function handleScheduleFormSubmit(e) {
       e.preventDefault();
       const editId = document.getElementById('form-edit-id').value;
@@ -1087,14 +1091,25 @@
         desc: descVal
       };
 
-      try {
-        const { error } = await supabase.from('schedules').upsert(payload);
-        if (error) throw error;
-        closeModal();
-        await fetchSchedules();
-      } catch (err) {
-        alert("일정 저장 실패: " + err.message);
+      if (supabase) {
+        try {
+          await supabase.from('schedules').upsert(payload);
+        } catch (err) {
+          console.warn(err);
+        }
       }
+
+      const idx = schedules.findIndex(it => it.id === payload.id);
+      if (idx !== -1) schedules[idx] = payload;
+      else schedules.push(payload);
+
+      const selectedDate = new Date(inputDateStr + 'T00:00:00');
+      currentMonday = getMonday(selectedDate);
+      currentCalMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+
+      closeModal();
+      renderCurrentView();
+      fetchSchedules();
     }
 
     async function handleModalDelete() {
@@ -1109,18 +1124,21 @@
       const title = targetItem ? `[${targetItem.title}]` : '선택한';
 
       if (confirm(`${title} 일정을 삭제하시겠습니까?`)) {
-        try {
-          const { error } = await supabase.from('schedules').delete().eq('id', id);
-          if (error) throw error;
-          await fetchSchedules();
-        } catch (err) {
-          alert("일정 삭제 실패: " + err.message);
+        if (supabase) {
+          try {
+            await supabase.from('schedules').delete().eq('id', id);
+          } catch (err) {
+            console.warn(err);
+          }
         }
+        schedules = schedules.filter(it => it.id !== id);
+        renderCurrentView();
+        fetchSchedules();
       }
     }
 
-    // 화면 시작 시 Supabase에서 데이터 호출 및 실시간 채널 구독
     window.addEventListener('DOMContentLoaded', () => {
+      renderCurrentView();
       fetchSchedules();
       fetchNotices();
       setupRealtimeSubscriptions();
