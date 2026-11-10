@@ -8,8 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Supabase JS Client CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
     @media print {
@@ -47,8 +45,8 @@
         <div>
           <div class="flex items-center space-x-2">
             <h1 class="text-lg font-bold tracking-tight">유치원 교육활동 & 월중행사 취합 시스템</h1>
-            <span id="sync-status-badge" class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full flex items-center">
-              <span class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1"></span>동기화 준비 중
+            <span id="sync-status-badge" class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full flex items-center transition-colors">
+              <span id="sync-dot" class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1"></span><span id="sync-text">서버 연결 확인 중</span>
             </span>
           </div>
           <p class="text-xs text-indigo-300">2026학년도 주간·월간 학사일정 아카이브</p>
@@ -227,7 +225,7 @@
     </div>
   </main>
 
-  <!-- 공지사항 모달 -->
+  <!-- 공지 모달 -->
   <div id="notice-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center no-print">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-slate-100">
       <div id="notice-modal-header" class="bg-amber-600 px-5 py-3.5 flex justify-between items-center text-white">
@@ -349,19 +347,10 @@
     </div>
   </div>
 
-  <!-- 자바스크립트 전체 로직 -->
+  <!-- 자바스크립트 로직 (안전 격리 + 브라우저 표준 REST API 통신) -->
   <script>
-    const SUPABASE_URL = "https://cxmlnghfwbzvznahdsey.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_YLeVQ0aWv53Ac-hlzaoE6g_kZ74S1bx";
-    let supabase = null;
-
-    try {
-      if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      }
-    } catch (e) {
-      console.warn("Supabase 초기화 예외:", e);
-    }
+    const SUPABASE_BASE_URL = "https://cxmlnghfwbzvznahdsey.supabase.co/rest/v1";
+    const SUPABASE_API_KEY = "sb_publishable_YLeVQ0aWv53Ac-hlzaoE6g_kZ74S1bx";
 
     const CATEGORIES = [
       '교육활동',
@@ -492,6 +481,7 @@
         end_date: "2026-03-31"
       }
     ];
+
     let showAllNotices = false;
     let currentTab = 'weekly';
 
@@ -513,6 +503,79 @@
     let currentMonday = getMonday(today);
     let currentCalMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
+    function updateSyncBadge(isOk, text) {
+      const badge = document.getElementById('sync-status-badge');
+      const dot = document.getElementById('sync-dot');
+      const label = document.getElementById('sync-text');
+      if (!badge || !dot || !label) return;
+
+      if (isOk) {
+        badge.className = "text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full flex items-center";
+        dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse";
+        label.textContent = text || "실시간 클라우드 연동 중";
+      } else {
+        badge.className = "text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full flex items-center";
+        dot.className = "w-1.5 h-1.5 rounded-full bg-slate-400 mr-1";
+        label.textContent = text || "로컬 모드";
+      }
+    }
+
+    // 표준 REST API를 통한 Supabase 요청 함수 (CDN 에러 완벽 차단)
+    async function supabaseRequest(endpoint, options = {}) {
+      const headers = {
+        'apikey': SUPABASE_API_KEY,
+        'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+        ...(options.headers || {})
+      };
+      const res = await fetch(`${SUPABASE_BASE_URL}/${endpoint}`, { ...options, headers });
+      if (!res.ok) throw new Error(await res.text());
+      return res.status === 204 ? null : await res.json();
+    }
+
+    async function fetchSchedules() {
+      try {
+        const data = await supabaseRequest('schedules?select=*');
+        if (Array.isArray(data)) {
+          if (data.length === 0) {
+            // DB가 비어있으면 초기 105건 자동 등록
+            await supabaseRequest('schedules', {
+              method: 'POST',
+              body: JSON.stringify(initialExcelSchedules)
+            });
+            schedules = [...initialExcelSchedules];
+          } else {
+            schedules = data;
+          }
+          updateSyncBadge(true, "실시간 클라우드 연동 중");
+          renderCurrentView();
+        }
+      } catch (err) {
+        console.warn("서버 통신 예외 (로컬 데이터 유지):", err);
+        updateSyncBadge(false, "오프라인/로컬 모드");
+      }
+    }
+
+    async function fetchNotices() {
+      try {
+        const data = await supabaseRequest('notices?select=*&order=created_at.desc');
+        if (Array.isArray(data)) {
+          if (data.length === 0) {
+            await supabaseRequest('notices', {
+              method: 'POST',
+              body: JSON.stringify(notices)
+            });
+          } else {
+            notices = data;
+          }
+          renderNotices();
+        }
+      } catch (err) {
+        console.warn("공지 통신 예외:", err);
+      }
+    }
+
     function goToToday() {
       const now = new Date();
       currentMonday = getMonday(now);
@@ -520,66 +583,36 @@
       renderCurrentView();
     }
 
-    // 서버 일정 가져오기
-    async function fetchSchedules() {
-      if (!supabase) return;
-      try {
-        const { data, error } = await supabase.from('schedules').select('*');
-        if (!error && data) {
-          if (data.length === 0) {
-            await supabase.from('schedules').insert(initialExcelSchedules);
-            schedules = [...initialExcelSchedules];
-          } else {
-            schedules = data;
-          }
-          renderCurrentView();
-        }
-      } catch (err) {
-        console.warn("서버 동기화 대기 중:", err);
+    function switchTab(tab) {
+      currentTab = tab;
+      const btnWeekly = document.getElementById('tab-btn-weekly');
+      const btnMonthly = document.getElementById('tab-btn-monthly');
+      const viewWeekly = document.getElementById('view-weekly');
+      const viewMonthly = document.getElementById('view-monthly');
+
+      if (!btnWeekly || !btnMonthly || !viewWeekly || !viewMonthly) return;
+
+      if (tab === 'weekly') {
+        btnWeekly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow';
+        btnMonthly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-indigo-200 hover:text-white';
+        viewWeekly.classList.remove('hidden');
+        viewMonthly.classList.add('hidden');
+      } else {
+        btnMonthly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow';
+        btnWeekly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-indigo-200 hover:text-white';
+        viewMonthly.classList.remove('hidden');
+        viewWeekly.classList.add('hidden');
       }
+      renderCurrentView();
     }
 
-    // 서버 공지 가져오기
-    async function fetchNotices() {
-      if (!supabase) return;
-      try {
-        const { data, error } = await supabase.from('notices').select('*').order('created_at', { ascending: false });
-        if (!error && data) {
-          if (data.length === 0) {
-            await supabase.from('notices').insert(notices);
-          } else {
-            notices = data;
-          }
-          renderNotices();
-        }
-      } catch (err) {
-        console.warn("공지 동기화 대기 중:", err);
+    function navigateDate(dir) {
+      if (currentTab === 'weekly') {
+        currentMonday.setDate(currentMonday.getDate() + (dir * 7));
+      } else {
+        currentCalMonth.setMonth(currentCalMonth.getMonth() + dir);
       }
-    }
-
-    // 실시간 구독 설정
-    function setupRealtimeSubscriptions() {
-      if (!supabase) return;
-      try {
-        supabase
-          .channel('schema-changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => {
-            fetchSchedules();
-          })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'notices' }, () => {
-            fetchNotices();
-          })
-          .subscribe((status) => {
-            const badge = document.getElementById('sync-status-badge');
-            if (!badge) return;
-            if (status === 'SUBSCRIBED') {
-              badge.className = "text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full flex items-center";
-              badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>실시간 동기화 중`;
-            }
-          });
-      } catch (e) {
-        console.warn("실시간 구독 설정 건너뜀:", e);
-      }
+      renderCurrentView();
     }
 
     function toggleNoticeFilter() {
@@ -739,21 +772,22 @@
         end_date: endDate
       };
 
-      if (supabase) {
-        try {
-          await supabase.from('notices').upsert(noticePayload);
-        } catch (err) {
-          console.warn(err);
-        }
-      }
-
       const idx = notices.findIndex(n => n.id === noticePayload.id);
       if (idx !== -1) notices[idx] = noticePayload;
       else notices.unshift(noticePayload);
 
       renderNotices();
       closeNoticeModal();
-      fetchNotices();
+
+      try {
+        await supabaseRequest('notices', {
+          method: 'POST',
+          headers: { 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify(noticePayload)
+        });
+      } catch (err) {
+        console.warn("공지 서버 업로드 실패:", err);
+      }
     }
 
     async function handleNoticeModalDelete() {
@@ -765,49 +799,14 @@
 
     async function deleteNotice(id) {
       if (confirm('이 공지사항을 삭제하시겠습니까?')) {
-        if (supabase) {
-          try {
-            await supabase.from('notices').delete().eq('id', id);
-          } catch (err) {
-            console.warn(err);
-          }
-        }
         notices = notices.filter(n => n.id !== id);
         renderNotices();
-        fetchNotices();
+        try {
+          await supabaseRequest(`notices?id=eq.${id}`, { method: 'DELETE' });
+        } catch (err) {
+          console.warn("공지 서버 삭제 실패:", err);
+        }
       }
-    }
-
-    function switchTab(tab) {
-      currentTab = tab;
-      const btnWeekly = document.getElementById('tab-btn-weekly');
-      const btnMonthly = document.getElementById('tab-btn-monthly');
-      const viewWeekly = document.getElementById('view-weekly');
-      const viewMonthly = document.getElementById('view-monthly');
-
-      if (!btnWeekly || !btnMonthly || !viewWeekly || !viewMonthly) return;
-
-      if (tab === 'weekly') {
-        btnWeekly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow';
-        btnMonthly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-indigo-200 hover:text-white';
-        viewWeekly.classList.remove('hidden');
-        viewMonthly.classList.add('hidden');
-      } else {
-        btnMonthly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-indigo-600 text-white shadow';
-        btnWeekly.className = 'cursor-pointer px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-indigo-200 hover:text-white';
-        viewMonthly.classList.remove('hidden');
-        viewWeekly.classList.add('hidden');
-      }
-      renderCurrentView();
-    }
-
-    function navigateDate(dir) {
-      if (currentTab === 'weekly') {
-        currentMonday.setDate(currentMonday.getDate() + (dir * 7));
-      } else {
-        currentCalMonth.setMonth(currentCalMonth.getMonth() + dir);
-      }
-      renderCurrentView();
     }
 
     function renderCurrentView() {
@@ -1051,7 +1050,7 @@
       document.getElementById('form-edit-id').value = item.id;
       document.getElementById('form-date').value = item.date;
       document.getElementById('form-target').value = item.target || "전원";
-      document.getElementById('form-category').value = (item.category === '교육행사' ? '교육활동' : item.category) || "교육활동";
+      document.getElementById('form-category').value = item.category || "교육활동";
       document.getElementById('form-owner').value = item.owner || "";
       document.getElementById('form-title').value = item.title || "";
       document.getElementById('form-desc').value = item.desc || "";
@@ -1091,14 +1090,6 @@
         desc: descVal
       };
 
-      if (supabase) {
-        try {
-          await supabase.from('schedules').upsert(payload);
-        } catch (err) {
-          console.warn(err);
-        }
-      }
-
       const idx = schedules.findIndex(it => it.id === payload.id);
       if (idx !== -1) schedules[idx] = payload;
       else schedules.push(payload);
@@ -1109,7 +1100,16 @@
 
       closeModal();
       renderCurrentView();
-      fetchSchedules();
+
+      try {
+        await supabaseRequest('schedules', {
+          method: 'POST',
+          headers: { 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn("서버 저장 실패:", err);
+      }
     }
 
     async function handleModalDelete() {
@@ -1124,25 +1124,28 @@
       const title = targetItem ? `[${targetItem.title}]` : '선택한';
 
       if (confirm(`${title} 일정을 삭제하시겠습니까?`)) {
-        if (supabase) {
-          try {
-            await supabase.from('schedules').delete().eq('id', id);
-          } catch (err) {
-            console.warn(err);
-          }
-        }
         schedules = schedules.filter(it => it.id !== id);
         renderCurrentView();
-        fetchSchedules();
+        try {
+          await supabaseRequest(`schedules?id=eq.${id}`, { method: 'DELETE' });
+        } catch (err) {
+          console.warn("서버 삭제 실패:", err);
+        }
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      renderCurrentView();
+    // 1. 화면 즉시 렌더링 (버튼 및 인터랙션이 절대 멈추지 않음)
+    renderCurrentView();
+
+    // 2. 백그라운드에서 안전하게 서버 데이터 동기화
+    fetchSchedules();
+    fetchNotices();
+
+    // 3. 5초마다 자동 새로고침(폴링)을 수행하여 다른 PC의 입력도 실시간 반영
+    setInterval(() => {
       fetchSchedules();
       fetchNotices();
-      setupRealtimeSubscriptions();
-    });
+    }, 5000);
   </script>
 </body>
 </html>
