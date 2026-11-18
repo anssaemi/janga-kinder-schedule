@@ -1,17 +1,26 @@
 name: Keep Supabase Active
 on:
   schedule:
-    # 매일 한국 시간 오전 9시(UTC 00:00)마다 자동 실행
-    - cron: '0 0 * * *'
-  workflow_dispatch: # 수동 테스트 실행 버튼 활성화
+    - cron: '0 0 * * *' # 매일 오전 9시 자동 실행
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase Database
+      - uses: actions/checkout@v4
+      - name: Ping Supabase & Update Timestamp
         run: |
           curl -s -o /dev/null -w "%{http_code}" \
             "https://cxmlnghfwbzvznahdsey.supabase.co/rest/v1/schedules?select=id&limit=1" \
             -H "apikey: sb_publishable_YLeVQ0aWv53Ac-hlzaoE6g_kZ74S1bx" \
             -H "Authorization: Bearer sb_publishable_YLeVQ0aWv53Ac-hlzaoE6g_kZ74S1bx"
+          date > last_ping.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add last_ping.txt
+          git commit -m "Auto keep-alive ping" || exit 0
+          git push
